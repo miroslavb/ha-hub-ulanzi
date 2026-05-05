@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Build artifacts
+*.zip
+*.tmp
+*.bak
+
+# Logs
+*.log
+
+# Local dev
+node_modules/

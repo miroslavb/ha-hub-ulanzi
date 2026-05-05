@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Hub</title>
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="ha-client.js"></script>
+  <script src="entity-cache.js"></script>
+  <script src="themes.js"></script>
+  <script src="icon-renderer.js"></script>
+  <script src="long-press.js"></script>
+  <script src="pulse-manager.js"></script>
+  <script src="edit-mode-manager.js"></script>
+  <script src="reveal-animator.js"></script>
+  <script src="settings.js"></script>
+  <script src="action-router.js"></script>
+  <script src="action-toggle.js"></script>
+  <script src="action-smarttoggle.js"></script>
+  <script src="action-aggregate.js"></script>
+  <script src="action-scene.js"></script>
+  <script src="action-service.js"></script>
+  <script src="action-sensor.js"></script>
+  <script src="action-encoder.js"></script>
+  <script src="action-smartdialer.js"></script>
+</head>
+<body>
+<script>
+// Singletons
+const haClient = new window.HAClient();
+const cache = new window.EntityCache(haClient);
+const settings = new window.HASettings();
+const longPress = new window.LongPressDetector(700);
+const pulse = new window.PulseManager();
+const editMode = new window.EditModeManager();
+const reveal = new window.RevealAnimator();
+
+const router = new window.ActionRouter({ client: haClient, cache, settings, pulse, editMode });
+router.register(window.ToggleAction);
+router.register(window.SmartToggleAction);
+router.register(window.AggregateAction);
+router.register(window.SceneAction);
+router.register(window.ServiceAction);
+router.register(window.SensorAction);
+router.register(window.EncoderAction);
+router.register(window.SmartDialerAction);
+
+// Re-render every action when HA reconnects (entity states may have changed)
+haClient.addEventListener('connected', () => {
+  $UD.logMessage('HA Hub: connected to ' + haClient.url, 'info');
+});
+haClient.addEventListener('error', (e) => {
+  $UD.logMessage('HA Hub error: ' + e.detail, 'warn');
+});
+cache.addEventListener('refreshed', () => {
+  router.forEach(action => action.render && action.render());
+});
+
+// When HA confirms a state change for the entity being edited, we no longer
+// need the optimistic value — HA's state is now authoritative.
+cache.addEventListener('entity-changed', (e) => {
+  const active = editMode.active;
+  if (active && e.detail.entityId === active.entityId) {
+    editMode.clearOptimistic();
+  }
+});
+
+// Apply global settings as soon as we have them
+settings.onGlobalChange(g => {
+  haClient.configure(g.haUrl, g.token);
+});
+
+$UD.connect('com.ulanzi.ulanzistudio.hahub');
+
+$UD.onConnected(() => {
+  $UD.logMessage('HA Hub plugin connected', 'info');
+  // Pull stored global connection settings on plugin startup
+  $UD.getGlobalSettings && $UD.getGlobalSettings();
+});
+
+// Cache of global URL+token + UI prefs. Pushed to PIs that ask for it.
+let globalConnection = { haUrl: '', token: '', revealEnabled: true, revealMode: 'per-tile' };
+
+$UD.onDidReceiveGlobalSettings && $UD.onDidReceiveGlobalSettings((message) => {
+  const data = message.payload || message.param || {};
+  if (data.haUrl) globalConnection.haUrl = data.haUrl;
+  if (data.token) globalConnection.token = data.token;
+  if (data.revealEnabled !== undefined) globalConnection.revealEnabled = !!data.revealEnabled;
+  if (data.revealMode) globalConnection.revealMode = data.revealMode;
+  reveal.setEnabled(globalConnection.revealEnabled);
+  reveal.setPuzzleMode(globalConnection.revealMode === 'puzzle');
+  if (globalConnection.haUrl && globalConnection.token) {
+    haClient.configure(globalConnection.haUrl, globalConnection.token);
+  }
+});
+
+// Helper: apply connection settings from any action's param payload.
+function applyConnection(param) {
+  if (param?.haUrl && param?.token) {
+    haClient.configure(param.haUrl, param.token);
+    if (param.haUrl !== globalConnection.haUrl || param.token !== globalConnection.token) {
+      globalConnection.haUrl = param.haUrl;
+      globalConnection.token = param.token;
+      $UD.setGlobalSettings && $UD.setGlobalSettings(globalConnection);
+    }
+  }
+  if (param?.revealEnabled !== undefined && param.revealEnabled !== '') {
+    const newVal = param.revealEnabled === true || param.revealEnabled === 'true' || param.revealEnabled === 'on';
+    if (newVal !== globalConnection.revealEnabled) {
+      globalConnection.revealEnabled = newVal;
+      reveal.setEnabled(newVal);
+      $UD.setGlobalSettings && $UD.setGlobalSettings(globalConnection);
+    }
+  }
+  if (param?.revealMode && (param.revealMode === 'per-tile' || param.revealMode === 'puzzle')) {
+    if (param.revealMode !== globalConnection.revealMode) {
+      globalConnection.revealMode = param.revealMode;
+      reveal.setPuzzleMode(param.revealMode === 'puzzle');
+      $UD.setGlobalSettings && $UD.setGlobalSettings(globalConnection);
+    }
+  }
+}
+
+// Long-press wiring
+longPress.onTap = (ctx) => {
+  const action = router.get(ctx);
+  if (action?.onTap) action.onTap();
+};
+longPress.onLongPress = (ctx) => {
+  const action = router.get(ctx);
+  if (action?.onLongPress) action.onLongPress();
+};
+
+// Lifecycle
+$UD.onAdd((message) => {
+  applyConnection(message.param);
+  const action = router.ensure(message.context);
+  if (action) action.configure(message.param);
+});
+
+$UD.onRun((message) => {
+  // onRun fires on tap-confirmed; if long-press is bound this is redundant.
+  // We use onKeyDown/onKeyUp for accurate long-press, but keep onRun as fallback.
+  const action = router.get(message.context);
+  if (action && !longPress.timers.has(message.context)) {
+    if (action.onTap) action.onTap();
+  }
+});
+
+$UD.onKeyDown && $UD.onKeyDown((message) => {
+  longPress.keyDown(message.context);
+});
+
+$UD.onKeyUp && $UD.onKeyUp((message) => {
+  longPress.keyUp(message.context);
+});
+
+$UD.onSendToPlugin((message) => {
+  // SDK sends sendToPlugin events under `payload`, NOT `param`.
+  const data = message.payload || message.param || {};
+
+
+  if (data.__type === 'query-entities') {
+    const list = cache.searchSummary(data.domains, data.query);
+    $UD.sendToPropertyInspector({ __type: 'entities', list }, message.context);
+    return;
+  }
+
+  if (data.__type === 'connection-status') {
+    $UD.sendToPropertyInspector({
+      __type: 'connection',
+      connected: haClient.connected && haClient.authed,
+      url: haClient.url
+    }, message.context);
+    return;
+  }
+
+  if (data.__type === 'get-global') {
+    $UD.sendToPropertyInspector({
+      __type: 'global',
+      haUrl: globalConnection.haUrl,
+      token: globalConnection.token,
+      revealEnabled: globalConnection.revealEnabled,
+      revealMode: globalConnection.revealMode
+    }, message.context);
+    return;
+  }
+
+  if (data.__type === 'get-key-settings') {
+    // PI is asking for the settings stored for this specific key.
+    // Used on PI re-open when SDK fires onAdd with empty param.
+    const stored = settings.getKey(message.context) || {};
+    $UD.sendToPropertyInspector({
+      __type: 'key-settings',
+      settings: stored
+    }, message.context);
+    return;
+  }
+
+  // Otherwise: action-specific config (includes haUrl+token inline).
+  applyConnection(data);
+
+  const action = router.ensure(message.context);
+  if (action) {
+    // Merge with existing settings: if data is missing some critical fields
+    // (e.g. partial onAdd echo), preserve previous values rather than wiping.
+    const existing = settings.getKey(message.context) || {};
+    const merged = { ...existing, ...data };
+    // But: if the incoming data explicitly has empty critical fields while
+    // existing had them filled, don't trust the incoming — keep existing.
+    const CRITICAL = ['entityId', 'displayEntityId', 'actionEntityId', 'domain', 'service', 'entityIds'];
+    for (const f of CRITICAL) {
+      if (existing[f] && (!data[f] || data[f] === '')) {
+        merged[f] = existing[f];
+      }
+    }
+    action.configure(merged);
+    $UD.setSettings(merged, message.context);
+  }
+});
+
+$UD.onClear((message) => {
+  if (!message.param) return;
+  for (const item of message.param) {
+    router.remove(item.context);
+  }
+});
+
+$UD.onSetActive && $UD.onSetActive((message) => {
+  const action = router.get(message.context);
+  if (!action) return;
+  if (message.active && reveal.enabled) {
+    reveal.start(message.context, action, message.key);
+  } else if (action.render && message.active !== false) {
+    action.render();
+  }
+});
+
+// ─── Encoder dial events ─────────────────────────────────────
+$UD.onDialDown && $UD.onDialDown((message) => {
+  const action = router.get(message.context);
+  if (action?.onDialDown) action.onDialDown();
+});
+
+$UD.onDialRotateLeft && $UD.onDialRotateLeft((message) => {
+  const action = router.get(message.context);
+  if (action?.onDialRotateLeft) action.onDialRotateLeft();
+});
+
+$UD.onDialRotateRight && $UD.onDialRotateRight((message) => {
+  const action = router.get(message.context);
+  if (action?.onDialRotateRight) action.onDialRotateRight();
+});
+</script>
+</body>
+</html>

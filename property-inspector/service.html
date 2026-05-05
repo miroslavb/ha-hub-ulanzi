@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Service Call</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css">
+  <link rel="stylesheet" href="_shared.css?v=0.11.13">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="_shared.js?v=0.11.13"></script>
+</head>
+<body>
+<div class="uspi-wrapper">
+  <form id="action-form">
+    <div id="conn-fields"></div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Domain</div>
+      <input type="text" class="uspi-item-value" name="domain" placeholder="e.g. notify">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Service</div>
+      <input type="text" class="uspi-item-value" name="service" placeholder="e.g. mobile_app_iphone">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Data (JSON)</div>
+      <textarea class="uspi-item-value" name="dataJson" placeholder='{"message": "Hello!"}'>{}</textarea>
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Label (optional)</div>
+      <input type="text" class="uspi-item-value" name="label" placeholder="e.g. PING">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Color (hex, optional)</div>
+      <input type="text" class="uspi-item-value" name="color" placeholder="#0ea5e9">
+    </div>
+
+    <div id="theme-select"></div>
+  </form>
+</div>
+
+<script>
+$UD.connect('com.ulanzi.ulanzistudio.hahub.service');
+
+const PI = window.HAHubPI;
+PI.renderConnectionFields(document.getElementById('conn-fields'));
+PI.renderThemeSelect(document.getElementById('theme-select'), 'theme', 'cool');
+
+$UD.onAdd((message) => {
+  PI.applyForm('action-form', message.param);
+  PI.requestGlobalConnection('action-form');
+  PI.requestKeySettings('action-form');
+});
+
+PI.bindFormChange('action-form');
+</script>
+</body>
+</html>

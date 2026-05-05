@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Aggregate</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css">
+  <link rel="stylesheet" href="_shared.css?v=0.11.13">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="_shared.js?v=0.11.13"></script>
+</head>
+<body>
+<div class="uspi-wrapper">
+  <form id="action-form">
+    <div id="conn-fields"></div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Entities (comma-separated)</div>
+      <textarea class="uspi-item-value" name="entityIds" rows="4"
+        placeholder="binary_sensor.washer_running, binary_sensor.dishwasher_running, binary_sensor.ev_charging"></textarea>
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Active when state =</div>
+      <input type="text" class="uspi-item-value" name="activeState" value="on" placeholder="on">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Label</div>
+      <input type="text" class="uspi-item-value" name="label" value="DEVICES">
+    </div>
+
+    <details open>
+      <summary class="hahub-section-title">Pulse options</summary>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Pulse speed</div>
+        <select class="uspi-item-value" name="pulseSpeed">
+          <option value="breathing">Breathing (slow)</option>
+          <option value="slow">Slow</option>
+          <option value="normal" selected>Normal</option>
+          <option value="fast">Fast</option>
+        </select>
+      </div>
+      <div id="pulse-color-field"></div>
+    </details>
+
+    <div id="theme-select"></div>
+  </form>
+</div>
+
+<script>
+$UD.connect('com.ulanzi.ulanzistudio.hahub.aggregate');
+
+const PI = window.HAHubPI;
+PI.renderConnectionFields(document.getElementById('conn-fields'));
+PI.renderThemeSelect(document.getElementById('theme-select'), 'theme', 'warm');
+PI.renderPulseColorField(document.getElementById('pulse-color-field'), '#f59e0b');
+
+$UD.onAdd((message) => {
+  PI.applyForm('action-form', message.param);
+  PI.requestGlobalConnection('action-form');
+  PI.requestKeySettings('action-form');
+});
+
+PI.bindFormChange('action-form');
+</script>
+</body>
+</html>

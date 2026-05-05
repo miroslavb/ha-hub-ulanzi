@@ -1,0 +1,152 @@
+{
+  "Author": "Bart",
+  "Name": "HA Hub",
+  "Description": "Home Assistant integration with live state, entity picker, pulse animations, long-press edit mode, and 8 action types: Toggle, Smart Toggle, Aggregate, Scene, Service Call, Sensor, Encoder, Smart Dialer.",
+  "Icon": "resources/plugin-icon.png",
+  "Version": "0.11.13",
+  "UUID": "com.ulanzi.ulanzistudio.hahub",
+  "Type": "JavaScript",
+  "CodePath": "plugin/app.html",
+  "Actions": [
+    {
+      "Name": "HA Toggle",
+      "Icon": "resources/action-toggle.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.toggle",
+      "PropertyInspectorPath": "property-inspector/toggle.html",
+      "States": [
+        {
+          "Name": "Off",
+          "Image": "resources/state-off.png"
+        },
+        {
+          "Name": "On",
+          "Image": "resources/state-on.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "HA Smart Toggle",
+      "Icon": "resources/action-smarttoggle.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.smarttoggle",
+      "PropertyInspectorPath": "property-inspector/smarttoggle.html",
+      "States": [
+        {
+          "Name": "Default",
+          "Image": "resources/action-smarttoggle.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "HA Aggregate",
+      "Icon": "resources/action-aggregate.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.aggregate",
+      "PropertyInspectorPath": "property-inspector/aggregate.html",
+      "States": [
+        {
+          "Name": "Default",
+          "Image": "resources/action-aggregate.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "HA Scene",
+      "Icon": "resources/action-scene.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.scene",
+      "PropertyInspectorPath": "property-inspector/scene.html",
+      "States": [
+        {
+          "Name": "Default",
+          "Image": "resources/action-scene.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "HA Service Call",
+      "Icon": "resources/action-service.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.service",
+      "PropertyInspectorPath": "property-inspector/service.html",
+      "States": [
+        {
+          "Name": "Default",
+          "Image": "resources/action-service.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "HA Sensor",
+      "Icon": "resources/action-sensor.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.sensor",
+      "PropertyInspectorPath": "property-inspector/sensor.html",
+      "States": [
+        {
+          "Name": "Default",
+          "Image": "resources/action-sensor.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "HA Encoder",
+      "Icon": "resources/action-encoder.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.encoder",
+      "PropertyInspectorPath": "property-inspector/encoder.html",
+      "States": [
+        {
+          "Name": "Default",
+          "Image": "resources/action-encoder.png"
+        }
+      ],
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "$UA1"
+      }
+    },
+    {
+      "Name": "HA Smart Dialer",
+      "Icon": "resources/action-smartdialer.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.smartdialer",
+      "PropertyInspectorPath": "property-inspector/smartdialer.html",
+      "States": [
+        {
+          "Name": "Default",
+          "Image": "resources/action-smartdialer.png"
+        }
+      ],
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "$UA1"
+      }
+    }
+  ],
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.11"
+    }
+  ]
+}

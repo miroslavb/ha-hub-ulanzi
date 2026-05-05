@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Encoder</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css">
+  <link rel="stylesheet" href="_shared.css?v=0.11.13">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="_shared.js?v=0.11.13"></script>
+</head>
+<body>
+<div class="uspi-wrapper">
+  <form id="action-form">
+    <div id="conn-fields"></div>
+
+    <div id="entity-picker"></div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Mode</div>
+      <select class="uspi-item-value" name="mode">
+        <option value="brightness">Brightness (light)</option>
+        <option value="volume">Volume (media_player)</option>
+        <option value="temperature">Temperature (climate)</option>
+        <option value="numeric">Numeric (input_number / number)</option>
+      </select>
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Step per click</div>
+      <input type="number" class="uspi-item-value" name="step" value="10" min="1">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Min</div>
+      <input type="number" class="uspi-item-value" name="min" value="0">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Max</div>
+      <input type="number" class="uspi-item-value" name="max" value="100">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Label (optional)</div>
+      <input type="text" class="uspi-item-value" name="label">
+    </div>
+
+    <div id="theme-select"></div>
+  </form>
+</div>
+
+<script>
+$UD.connect('com.ulanzi.ulanzistudio.hahub.encoder');
+
+const PI = window.HAHubPI;
+PI.renderConnectionFields(document.getElementById('conn-fields'));
+PI.renderEntityPicker(document.getElementById('entity-picker'), {
+  domains: ['light', 'media_player', 'climate', 'input_number', 'number'],
+  name: 'entityId',
+  label: 'Entity',
+  onPick: () => PI.sendConfig('action-form')
+});
+PI.renderThemeSelect(document.getElementById('theme-select'), 'theme', 'cool');
+
+$UD.onAdd((message) => {
+  PI.applyForm('action-form', message.param);
+  PI.requestGlobalConnection('action-form');
+  PI.requestKeySettings('action-form');
+});
+
+PI.bindFormChange('action-form');
+</script>
+</body>
+</html>

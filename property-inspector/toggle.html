@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Toggle</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css">
+  <link rel="stylesheet" href="_shared.css?v=0.11.13">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="_shared.js?v=0.11.13"></script>
+</head>
+<body>
+<div class="uspi-wrapper">
+  <form id="action-form">
+    <div id="conn-fields"></div>
+
+    <div id="entity-picker"></div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Label (optional)</div>
+      <input type="text" class="uspi-item-value" name="label" placeholder="e.g. DESK">
+    </div>
+
+    <div id="theme-select"></div>
+
+    <details>
+      <summary class="hahub-section-title">Custom state text (optional)</summary>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Text when ON</div>
+        <input type="text" class="uspi-item-value" name="onText" placeholder="ON (default)">
+      </div>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Text when OFF</div>
+        <input type="text" class="uspi-item-value" name="offText" placeholder="OFF (default)">
+      </div>
+    </details>
+
+    <details>
+      <summary class="hahub-section-title">Long-press action (optional)</summary>
+      <div class="uspi-item" style="font-size: 11px; color: #888; padding: 4px 0;">
+        For lights, climate, covers, media players and fans, long-press automatically activates Edit Mode (use Smart Dialer encoder to adjust). The field below only applies to other domains.
+      </div>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Long-press entity</div>
+        <input type="text" class="uspi-item-value" name="longPressEntityId" placeholder="e.g. scene.office_off">
+      </div>
+    </details>
+
+    <details>
+      <summary class="hahub-section-title">Pulse animation (optional)</summary>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Pulse when state =</div>
+        <input type="text" class="uspi-item-value" name="pulseOn" placeholder="e.g. on (empty = no pulse)">
+      </div>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Pulse speed</div>
+        <select class="uspi-item-value" name="pulseSpeed">
+          <option value="breathing">Breathing (slow)</option>
+          <option value="slow">Slow</option>
+          <option value="normal" selected>Normal</option>
+          <option value="fast">Fast</option>
+        </select>
+      </div>
+      <div id="pulse-color-field"></div>
+    </details>
+  </form>
+</div>
+
+<script>
+$UD.connect('com.ulanzi.ulanzistudio.hahub.toggle');
+
+const PI = window.HAHubPI;
+PI.renderConnectionFields(document.getElementById('conn-fields'));
+PI.renderEntityPicker(document.getElementById('entity-picker'), {
+  domains: ['switch', 'light', 'input_boolean', 'fan', 'cover', 'media_player', 'climate'],
+  name: 'entityId',
+  label: 'Entity',
+  onPick: () => PI.sendConfig('action-form')
+});
+PI.renderThemeSelect(document.getElementById('theme-select'), 'theme', 'default');
+PI.renderPulseColorField(document.getElementById('pulse-color-field'));
+
+$UD.onAdd((message) => {
+  PI.applyForm('action-form', message.param);
+  PI.requestGlobalConnection('action-form');
+  PI.requestKeySettings('action-form');
+});
+
+PI.bindFormChange('action-form');
+</script>
+</body>
+</html>

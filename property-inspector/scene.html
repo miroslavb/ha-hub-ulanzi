@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Scene</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css">
+  <link rel="stylesheet" href="_shared.css?v=0.11.13">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="_shared.js?v=0.11.13"></script>
+</head>
+<body>
+<div class="uspi-wrapper">
+  <form id="action-form">
+    <div id="conn-fields"></div>
+
+    <div id="entity-picker"></div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Label (optional)</div>
+      <input type="text" class="uspi-item-value" name="label" placeholder="e.g. EVENING">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Color (hex, optional)</div>
+      <input type="text" class="uspi-item-value" name="color" placeholder="#7c3aed">
+    </div>
+
+    <div id="theme-select"></div>
+  </form>
+</div>
+
+<script>
+$UD.connect('com.ulanzi.ulanzistudio.hahub.scene');
+
+const PI = window.HAHubPI;
+PI.renderConnectionFields(document.getElementById('conn-fields'));
+PI.renderEntityPicker(document.getElementById('entity-picker'), {
+  domains: ['scene', 'script', 'automation'],
+  name: 'entityId',
+  label: 'Scene / script / automation',
+  onPick: () => PI.sendConfig('action-form')
+});
+PI.renderThemeSelect(document.getElementById('theme-select'), 'theme', 'default');
+
+$UD.onAdd((message) => {
+  PI.applyForm('action-form', message.param);
+  PI.requestGlobalConnection('action-form');
+  PI.requestKeySettings('action-form');
+});
+
+PI.bindFormChange('action-form');
+</script>
+</body>
+</html>

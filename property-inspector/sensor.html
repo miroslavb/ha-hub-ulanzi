@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Sensor</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css">
+  <link rel="stylesheet" href="_shared.css?v=0.11.13">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="_shared.js?v=0.11.13"></script>
+</head>
+<body>
+<div class="uspi-wrapper">
+  <form id="action-form">
+    <div id="conn-fields"></div>
+
+    <div id="entity-picker"></div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Label (optional)</div>
+      <input type="text" class="uspi-item-value" name="label" placeholder="e.g. SOLAR">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Attribute (optional)</div>
+      <input type="text" class="uspi-item-value" name="attribute" placeholder="empty = state, or e.g. battery_level">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Decimals</div>
+      <input type="number" class="uspi-item-value" name="decimals" value="0" min="0" max="4">
+    </div>
+
+    <details>
+      <summary class="hahub-section-title">Thresholds (warning color)</summary>
+      <div class="uspi-item">
+        <div class="uspi-item-label">High (warning when value &gt; X)</div>
+        <input type="number" class="uspi-item-value" name="thresholdHigh" placeholder="e.g. 80">
+      </div>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Low (warning when value &lt; X)</div>
+        <input type="number" class="uspi-item-value" name="thresholdLow" placeholder="e.g. 20">
+      </div>
+    </details>
+
+    <div id="theme-select"></div>
+  </form>
+</div>
+
+<script>
+$UD.connect('com.ulanzi.ulanzistudio.hahub.sensor');
+
+const PI = window.HAHubPI;
+PI.renderConnectionFields(document.getElementById('conn-fields'));
+PI.renderEntityPicker(document.getElementById('entity-picker'), {
+  domains: ['sensor', 'binary_sensor', 'input_number', 'number', 'climate', 'weather'],
+  name: 'entityId',
+  label: 'Entity',
+  onPick: () => PI.sendConfig('action-form')
+});
+PI.renderThemeSelect(document.getElementById('theme-select'), 'theme', 'cool');
+
+$UD.onAdd((message) => {
+  PI.applyForm('action-form', message.param);
+  PI.requestGlobalConnection('action-form');
+  PI.requestKeySettings('action-form');
+});
+
+PI.bindFormChange('action-form');
+</script>
+</body>
+</html>

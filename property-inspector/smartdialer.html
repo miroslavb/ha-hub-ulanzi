@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Smart Dialer</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css">
+  <link rel="stylesheet" href="_shared.css?v=0.11.13">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="_shared.js?v=0.11.13"></script>
+</head>
+<body>
+<div class="uspi-wrapper">
+  <form id="action-form">
+    <div id="conn-fields"></div>
+
+    <div style="margin: 8px 0; padding: 10px; background: #1a3a3a; border-radius: 4px; font-size: 11px; color: #a0e0e0; line-height: 1.5;">
+      <strong>How Smart Dialer works:</strong><br>
+      Long-press (700ms) any HA Toggle or HA Smart Toggle whose entity is a <strong>light, climate, cover, media_player or fan</strong>. This Smart Dialer takes over: rotate to adjust brightness / temperature / volume / etc. Press the dial to toggle on/off. Auto-exits after 5 seconds idle, or tap source key to confirm.
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Step size per click</div>
+      <input type="number" class="uspi-item-value" name="step" value="10" min="1">
+    </div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Idle label</div>
+      <input type="text" class="uspi-item-value" name="idleLabel" value="EDIT" placeholder="EDIT">
+    </div>
+
+    <div id="theme-select"></div>
+  </form>
+</div>
+
+<script>
+$UD.connect('com.ulanzi.ulanzistudio.hahub.smartdialer');
+
+const PI = window.HAHubPI;
+PI.renderConnectionFields(document.getElementById('conn-fields'));
+PI.renderThemeSelect(document.getElementById('theme-select'), 'theme', 'cool');
+
+$UD.onAdd((message) => {
+  PI.applyForm('action-form', message.param);
+  PI.requestGlobalConnection('action-form');
+  PI.requestKeySettings('action-form');
+});
+
+PI.bindFormChange('action-form');
+</script>
+</body>
+</html>

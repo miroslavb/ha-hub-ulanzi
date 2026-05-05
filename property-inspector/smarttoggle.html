@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Smart Toggle</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css">
+  <link rel="stylesheet" href="_shared.css?v=0.11.13">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="_shared.js?v=0.11.13"></script>
+</head>
+<body>
+<div class="uspi-wrapper">
+  <form id="action-form">
+    <div id="conn-fields"></div>
+
+    <div class="hahub-section-title">Display (read-only state)</div>
+    <div id="display-picker"></div>
+
+    <div class="hahub-section-title">Action (entity to toggle on tap)</div>
+    <div id="action-picker"></div>
+
+    <div class="uspi-item">
+      <div class="uspi-item-label">Label (optional)</div>
+      <input type="text" class="uspi-item-value" name="label" placeholder="e.g. WASHER">
+    </div>
+
+    <details open>
+      <summary class="hahub-section-title">State text & pulse</summary>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Text when active</div>
+        <input type="text" class="uspi-item-value" name="onText" placeholder="RUNNING" value="RUNNING">
+      </div>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Text when idle</div>
+        <input type="text" class="uspi-item-value" name="offText" placeholder="IDLE" value="IDLE">
+      </div>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Pulse when state =</div>
+        <input type="text" class="uspi-item-value" name="pulseOn" placeholder="on" value="on">
+      </div>
+      <div class="uspi-item">
+        <div class="uspi-item-label">Pulse speed</div>
+        <select class="uspi-item-value" name="pulseSpeed">
+          <option value="breathing">Breathing (slow)</option>
+          <option value="slow">Slow</option>
+          <option value="normal" selected>Normal</option>
+          <option value="fast">Fast</option>
+        </select>
+      </div>
+      <div id="pulse-color-field"></div>
+      <div class="hahub-toggle-row">
+        <input type="checkbox" id="hahub-cb-forced" name="showForcedBadge">
+        <label for="hahub-cb-forced">Show "⚡ FORCED" badge when action entity is on</label>
+      </div>
+    </details>
+
+    <div id="theme-select"></div>
+  </form>
+</div>
+
+<script>
+$UD.connect('com.ulanzi.ulanzistudio.hahub.smarttoggle');
+
+const PI = window.HAHubPI;
+PI.renderConnectionFields(document.getElementById('conn-fields'));
+PI.renderEntityPicker(document.getElementById('display-picker'), {
+  domains: ['binary_sensor', 'sensor', 'switch', 'input_boolean', 'light', 'climate', 'cover', 'media_player', 'fan'],
+  name: 'displayEntityId',
+  label: 'Display entity',
+  onPick: () => PI.sendConfig('action-form')
+});
+PI.renderEntityPicker(document.getElementById('action-picker'), {
+  domains: ['input_boolean', 'switch', 'light', 'fan', 'script', 'scene'],
+  name: 'actionEntityId',
+  label: 'Action entity',
+  onPick: () => PI.sendConfig('action-form')
+});
+PI.renderThemeSelect(document.getElementById('theme-select'), 'theme', 'default');
+PI.renderPulseColorField(document.getElementById('pulse-color-field'));
+
+$UD.onAdd((message) => {
+  PI.applyForm('action-form', message.param);
+  PI.requestGlobalConnection('action-form');
+  PI.requestKeySettings('action-form');
+});
+
+PI.bindFormChange('action-form');
+</script>
+</body>
+</html>
