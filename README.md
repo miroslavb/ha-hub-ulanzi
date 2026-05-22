@@ -1,3 +1,7 @@
+<a href="https://www.buymeacoffee.com/weemaba">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174">
+</a>
+
 # HA Hub for UlanziDeck
 
 > Bring your Home Assistant home into reach. Live state on every key,
