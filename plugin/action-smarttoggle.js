@@ -49,6 +49,7 @@ class SmartToggleAction {
       actionEntityId:  (param?.actionEntityId  || '').trim(),
       label:           (param?.label           || '').trim(),
       theme:            param?.theme || 'default',
+      iconMode:         param?.iconMode || 'none',
       onText:          (param?.onText          || 'RUNNING').trim(),
       offText:         (param?.offText         || 'IDLE').trim(),
       pulseOn:         (param?.pulseOn         || 'on').trim(),
@@ -143,8 +144,15 @@ class SmartToggleAction {
       if (actionEnt?.state === 'on') sublabel = '⚡ FORCED';
     }
 
+    let iconName = null;
+    if (cfg.iconMode && cfg.iconMode !== 'none' && window.HAIcons) {
+      iconName = window.HAIcons.resolveIconName(
+        ent || { entity_id: cfg.displayEntityId, state, attributes: {} });
+    }
+
     const baseOpts = {
       state, label, sublabel, theme: cfg.theme,
+      iconMode: cfg.iconMode, iconName,
       onText: cfg.onText, offText: cfg.offText,
       pulseColor: cfg.pulseColor || undefined
     };

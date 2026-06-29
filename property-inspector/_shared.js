@@ -211,6 +211,27 @@
       </div>`;
   };
 
+  // ─── Icon mode dropdown ───────────────────────────────────────
+  // Lets a key render the entity's standard Home Assistant icon (the same MDI
+  // glyph HA shows) instead of (or alongside) the status text. Default keeps
+  // the original text-only look so existing keys are unchanged.
+  PI.renderIconModeSelect = function (container, name, defaultValue) {
+    const opts = [
+      ['none', 'Text only (default)'],
+      ['icon', 'HA icon'],
+      ['iconlabel', 'HA icon + label']
+    ];
+    const def = defaultValue || 'none';
+    container.innerHTML = `
+      <div class="uspi-item">
+        <div class="uspi-item-label">Icon</div>
+        <select class="uspi-item-value" name="${name || 'iconMode'}">
+          ${opts.map(([k, l]) =>
+            `<option value="${k}"${k === def ? ' selected' : ''}>${l}</option>`).join('')}
+        </select>
+      </div>`;
+  };
+
   // Pulse color picker: visual color picker + hex text input, side by side.
   // Default red unless user picks something else.
   PI.renderPulseColorField = function (container, defaultHex) {

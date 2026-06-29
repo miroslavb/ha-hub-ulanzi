@@ -48,6 +48,7 @@ class ToggleAction {
       entityId: (param?.entityId || '').trim(),
       label:    (param?.label    || '').trim(),
       theme:    param?.theme || 'default',
+      iconMode: param?.iconMode || 'none',
       onText:   (param?.onText  || '').trim(),
       offText:  (param?.offText || '').trim(),
       longPressEntityId: (param?.longPressEntityId || '').trim(),
@@ -87,6 +88,7 @@ class ToggleAction {
     const ent = this.deps.cache.get(cfg.entityId);
     const state = ent?.state ?? null;
     const label = (cfg.label || ent?.attributes?.friendly_name || cfg.entityId.split('.').pop() || '').toUpperCase();
+    const iconName = this.resolveIcon(cfg, ent, state);
 
     // If in edit mode for this entity: cyan pulse + show live value as sublabel
     if (this.isBeingEdited()) {
@@ -112,6 +114,7 @@ class ToggleAction {
         this.deps.pulse.start(this.context, cfg.pulseSpeed, (intensity) => {
           const data = window.IconRenderer.renderState({
             state, label, theme: cfg.theme, intensity,
+            iconMode: cfg.iconMode, iconName,
             pulseColor: cfg.pulseColor || undefined,
             onText: cfg.onText || undefined,
             offText: cfg.offText || undefined
@@ -121,6 +124,7 @@ class ToggleAction {
       }
       const data = window.IconRenderer.renderState({
         state, label, theme: cfg.theme, intensity: 0.5,
+        iconMode: cfg.iconMode, iconName,
         pulseColor: cfg.pulseColor || undefined,
         onText: cfg.onText || undefined,
         offText: cfg.offText || undefined
@@ -130,11 +134,20 @@ class ToggleAction {
       this.deps.pulse.stop(this.context);
       const data = window.IconRenderer.renderState({
         state, label, theme: cfg.theme,
+        iconMode: cfg.iconMode, iconName,
         onText: cfg.onText || undefined,
         offText: cfg.offText || undefined
       });
       $UD.setBaseDataIcon(this.context, data, '');
     }
+  }
+
+  // Resolve the standard HA icon name for this entity, or null when icon mode
+  // is off (or the icon library isn't loaded). Falls back to a synthetic entity
+  // so a domain-default icon is still chosen before the entity reaches cache.
+  resolveIcon(cfg, ent, state) {
+    if (!cfg.iconMode || cfg.iconMode === 'none' || !window.HAIcons) return null;
+    return window.HAIcons.resolveIconName(ent || { entity_id: cfg.entityId, state, attributes: {} });
   }
 
   // Custom render path during edit mode — cyan background with live value

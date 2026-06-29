@@ -15,7 +15,8 @@ class SceneAction {
       entityId: (param?.entityId || '').trim(),
       label: (param?.label || '').trim(),
       color: param?.color || '',
-      theme: param?.theme || 'default'
+      theme: param?.theme || 'default',
+      iconMode: param?.iconMode || 'none'
     });
     this.render();
   }
@@ -23,8 +24,15 @@ class SceneAction {
   render() {
     const cfg = this.deps.settings.getKey(this.context);
     const label = (cfg.label || cfg.entityId?.split('.').pop() || 'SCENE').toUpperCase();
+    let iconName = null;
+    if (cfg.iconMode && cfg.iconMode !== 'none' && window.HAIcons && cfg.entityId) {
+      const ent = this.deps.cache.get(cfg.entityId);
+      iconName = window.HAIcons.resolveIconName(
+        ent || { entity_id: cfg.entityId, state: '', attributes: {} });
+    }
     const data = window.IconRenderer.renderTrigger({
-      label, theme: cfg.theme, color: cfg.color || null
+      label, theme: cfg.theme, color: cfg.color || null,
+      iconMode: cfg.iconMode, iconName
     });
     $UD.setBaseDataIcon(this.context, data, '');
   }

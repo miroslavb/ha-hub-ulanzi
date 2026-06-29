@@ -33,7 +33,8 @@ class SensorAction {
       decimals: parseInt(param?.decimals) || 0,
       thresholdHigh: param?.thresholdHigh != null && param?.thresholdHigh !== '' ? parseFloat(param.thresholdHigh) : null,
       thresholdLow:  param?.thresholdLow  != null && param?.thresholdLow  !== '' ? parseFloat(param.thresholdLow)  : null,
-      theme: param?.theme || 'cool'
+      theme: param?.theme || 'cool',
+      iconMode: param?.iconMode || 'none'
     });
     this.render();
   }
@@ -73,9 +74,16 @@ class SensorAction {
     const warning = this.evaluateWarning(value, cfg);
     const muted = (raw == null || raw === 'unavailable');
 
+    let iconName = null;
+    if (cfg.iconMode && cfg.iconMode !== 'none' && window.HAIcons) {
+      iconName = window.HAIcons.resolveIconName(
+        ent || { entity_id: cfg.entityId, state: raw, attributes: {} });
+    }
+
     const data = window.IconRenderer.renderSensor({
       value: muted ? '—' : value,
-      unit, label, warning, muted, theme: cfg.theme
+      unit, label, warning, muted, theme: cfg.theme,
+      iconMode: cfg.iconMode, iconName
     });
     $UD.setBaseDataIcon(this.context, data, '');
   }

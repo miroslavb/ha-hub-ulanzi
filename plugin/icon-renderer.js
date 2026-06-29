@@ -23,6 +23,34 @@ function drawCenteredText(ctx, text, y, color, size, weight) {
   ctx.fillText(text, ICON_SIZE / 2, y);
 }
 
+// Draw a Material Design Icon (by HA icon name, e.g. "lightbulb" or "mdi:lightbulb")
+// centered at (cx, cy) inside a sizePx box. MDI paths use a 24x24 viewBox, so we
+// scale accordingly. Returns true if an icon was actually drawn, false otherwise
+// (no Path2D support, icon name unknown, or HAIcons not loaded) — callers fall
+// back to their text layout in that case.
+function drawMdiIcon(ctx, iconName, cx, cy, sizePx, color, opacity) {
+  if (!iconName || typeof Path2D === 'undefined') return false;
+  const d = (window.HAIcons && window.HAIcons.getPath(iconName)) || null;
+  if (!d) return false;
+  let path;
+  try { path = new Path2D(d); } catch (e) { return false; }
+  const scale = sizePx / 24;
+  ctx.save();
+  if (opacity != null) ctx.globalAlpha = opacity;
+  ctx.fillStyle = color;
+  ctx.translate(cx - sizePx / 2, cy - sizePx / 2);
+  ctx.scale(scale, scale);
+  ctx.fill(path);
+  ctx.restore();
+  return true;
+}
+
+// True when the caller asked for an icon layout and provided an icon name.
+function wantsIcon(opts) {
+  const m = opts && opts.iconMode;
+  return (m === 'icon' || m === 'iconlabel') && !!opts.iconName;
+}
+
 // Render a state-toggle icon (toggle / scene / service result).
 function renderState(opts) {
   const { state, label, sublabel, theme, intensity, pulseColor } = opts;
@@ -63,6 +91,26 @@ function renderState(opts) {
   const ctx = c.getContext('2d');
   fillBackground(ctx, bg);
 
+  // Icon mode: draw the entity's standard HA icon instead of the status word.
+  // State is still conveyed by the background colour (and pulse). Falls through
+  // to the text layout if the icon can't be drawn.
+  if (wantsIcon(opts)) {
+    const withLabel = opts.iconMode === 'iconlabel';
+    const drawn = drawMdiIcon(
+      ctx, opts.iconName,
+      ICON_SIZE / 2,
+      withLabel ? ICON_SIZE * 0.42 : ICON_SIZE / 2,
+      withLabel ? 64 : 78,
+      palette.fg
+    );
+    if (drawn) {
+      if (withLabel && label) {
+        drawCenteredText(ctx, label.slice(0, 12), ICON_SIZE * 0.84, palette.fg, 18, 'bold');
+      }
+      return c.toDataURL('image/png').split(',')[1];
+    }
+  }
+
   if (label && sublabel) {
     drawCenteredText(ctx, status, ICON_SIZE * 0.30, palette.fg, 32, 'bold');
     drawCenteredText(ctx, label.slice(0, 12), ICON_SIZE * 0.58, palette.fg, 18);
@@ -92,6 +140,21 @@ function renderSensor(opts) {
   fillBackground(ctx, palette.bg);
 
   const display = (value == null) ? '?' : String(value);
+
+  // Icon mode: small icon on top, value below, optional name label.
+  if (wantsIcon(opts)) {
+    const drawn = drawMdiIcon(ctx, opts.iconName, ICON_SIZE / 2, ICON_SIZE * 0.27, 46, palette.fg);
+    if (drawn) {
+      const vSize = display.length > 5 ? 22 : (display.length > 3 ? 28 : 36);
+      drawCenteredText(ctx, display, ICON_SIZE * 0.60, palette.fg, vSize, 'bold');
+      if (unit) drawCenteredText(ctx, unit, ICON_SIZE * 0.78, palette.fg, 13);
+      if (opts.iconMode === 'iconlabel' && label) {
+        drawCenteredText(ctx, label.slice(0, 14), ICON_SIZE * 0.92, palette.fg, 12);
+      }
+      return c.toDataURL('image/png').split(',')[1];
+    }
+  }
+
   const valueSize = display.length > 5 ? 26 : (display.length > 3 ? 32 : 42);
 
   drawCenteredText(ctx, display, ICON_SIZE * 0.42, palette.fg, valueSize, 'bold');
@@ -110,6 +173,25 @@ function renderTrigger(opts) {
   const c = makeCanvas();
   const ctx = c.getContext('2d');
   fillBackground(ctx, palette.bg);
+
+  // Icon mode: draw the entity's HA icon (scene/script/automation) instead of
+  // the generic play triangle. Falls through to the triangle if not drawable.
+  if (wantsIcon(opts)) {
+    const withLabel = opts.iconMode === 'iconlabel';
+    const drawn = drawMdiIcon(
+      ctx, opts.iconName,
+      ICON_SIZE / 2,
+      withLabel ? ICON_SIZE * 0.42 : ICON_SIZE / 2,
+      withLabel ? 60 : 76,
+      palette.fg
+    );
+    if (drawn) {
+      if (withLabel && label) {
+        drawCenteredText(ctx, label.slice(0, 14), ICON_SIZE * 0.84, palette.fg, 18, 'bold');
+      }
+      return c.toDataURL('image/png').split(',')[1];
+    }
+  }
 
   // Draw a simple play/trigger glyph (triangle) above label
   ctx.fillStyle = palette.fg;

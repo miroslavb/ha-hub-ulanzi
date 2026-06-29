@@ -8,7 +8,7 @@
 > long-press to dial, multi-entity hubs, and a stylized HA logo reveal
 > when you switch pages.
 
-[![Version](https://img.shields.io/badge/version-0.11.13--beta-orange)](#)
+[![Version](https://img.shields.io/badge/version-0.12.0--beta-orange)](#)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![Status](https://img.shields.io/badge/status-beta-yellow)](#status)
 [![Ulanzi SDK](https://img.shields.io/badge/Ulanzi%20SDK-v2.1.2-green)](https://github.com/UlanziTechnology/UlanziDeckPlugin-SDK)
@@ -30,6 +30,9 @@ pulse when something is active.
 - **Long-press → Smart Dialer**: hold any light/climate/cover/media_player
   key for 700 ms, then turn the dial — works for every device with a single
   encoder
+- **Standard HA icons** — render the same Material Design icon Home Assistant
+  shows for an entity (state-aware, e.g. door open/closed), instead of plain
+  status text. The full MDI set is bundled, so it works fully offline
 - **Pulse animations** with configurable color, speed, and trigger state
 - **HA logo reveal** on page switch (per-tile flip or experimental
   coordinated puzzle reveal across all keys)
@@ -50,12 +53,37 @@ pulse when something is active.
 | **HA Encoder** | Rotary dial bound to one entity (brightness, volume, temperature, numeric). |
 | **HA Smart Dialer** | Universal dial: long-press any HA Toggle / Smart Toggle on a light/climate/cover/media_player/fan, then rotate this dial to adjust the matching property. |
 
+## Entity icons
+
+By default a key shows the entity's state as text (e.g. `ON` / `OFF`). You can
+instead show the **standard Home Assistant icon** for the entity — the same
+Material Design Icon HA displays in its dashboard. In the Property Inspector,
+set **Icon** to:
+
+- **Text only** (default) — the original look; existing keys are unchanged
+- **HA icon** — the entity's icon, large and centered; state is conveyed by the
+  background color (and pulse)
+- **HA icon + label** — the icon with the entity/label name beneath it
+
+Available on **HA Toggle**, **HA Smart Toggle**, **HA Scene**, and **HA Sensor**
+keys. Icon resolution mirrors Home Assistant:
+
+1. an explicit `icon:` set on the entity (e.g. `mdi:washing-machine`) wins,
+2. otherwise the domain / device-class / state default is used (so a
+   `binary_sensor` with `device_class: door` shows an open vs. closed door as
+   it changes state),
+3. with a generic glyph as a last resort.
+
+The complete Material Design Icons set (v7.x) is bundled with the plugin, so
+**no internet access is needed** to draw icons — everything renders locally.
+
 ## Status
 
-**0.11.13 beta.** Tested on UlanziDeck D200X with Home Assistant Core 2026.x
-on a single home setup. Eight action types, ~20 SDK quirks worked through,
-solid for daily use. Real-world testing on diverse setups is still in
-progress — please report issues with reproduction steps.
+**0.12.0 beta.** Tested on UlanziDeck D200X with Home Assistant Core 2026.x
+on a single home setup. Eight action types, optional standard HA entity icons,
+~20 SDK quirks worked through, solid for daily use. Real-world testing on
+diverse setups is still in progress — please report issues with reproduction
+steps.
 
 ## Installation
 
@@ -194,4 +222,10 @@ modifications must publish source.
 
 - [UlanziDeck Plugin SDK](https://github.com/UlanziTechnology/UlanziDeckPlugin-SDK)
 - [Home Assistant WebSocket API](https://developers.home-assistant.io/docs/api/websocket)
+- [Material Design Icons](https://pictogrammers.com/library/mdi/) by
+  Pictogrammers (Apache-2.0) — bundled via
+  [`@mdi/js`](https://www.npmjs.com/package/@mdi/js) to render standard HA
+  entity icons. Default icon mappings derive from
+  [Home Assistant core](https://github.com/home-assistant/core) component
+  `icons.json` data.
 - Built by Bart over a long pair-programming arc with Claude (Anthropic).

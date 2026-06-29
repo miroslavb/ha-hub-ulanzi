@@ -5,6 +5,32 @@ All notable changes to HA Hub for UlanziDeck.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.12.0] - 2026-06-29
+
+### Added
+- **Standard Home Assistant entity icons.** Keys can now render the same
+  Material Design Icon that Home Assistant shows for an entity, instead of (or
+  alongside) the status text. A new **Icon** option in the Property Inspector
+  offers `Text only` (default, unchanged), `HA icon`, and `HA icon + label`.
+  Available on **HA Toggle**, **HA Smart Toggle**, **HA Scene**, and
+  **HA Sensor** actions.
+  - Icon resolution mirrors the HA frontend: an explicit `icon:` on the entity
+    wins (e.g. `mdi:washing-machine`), otherwise the domain / device-class /
+    state default is used (e.g. `binary_sensor` with `device_class: door`
+    shows an open vs. closed door as state changes), with a generic glyph as
+    fallback.
+  - The complete Material Design Icons set (v7.4.x, via `@mdi/js`) is bundled
+    (`plugin/mdi-icons.js`), so icons render fully offline — no network calls.
+  - Default icon mappings (`plugin/ha-icons.js`) are generated from Home
+    Assistant core component `icons.json` data (43 domains, plus device
+    classes and state variants).
+  - Icons are drawn on the canvas via `Path2D`; the background still conveys
+    on/off state and pulse, exactly as before.
+
+### Notes
+- Existing keys are unaffected — the icon option defaults to `Text only`, so
+  upgrading changes nothing until you opt in per key.
+
 ## [0.11.13] - 2026-05-04
 
 ### Fixed
