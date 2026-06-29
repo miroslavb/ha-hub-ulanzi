@@ -120,24 +120,75 @@
   };
 
   // ─── Direct HA test from PI (no main service roundtrip) ──────
+  // Primary path mirrors the runtime (plugin/ha-client.js): connect over the HA
+  // WebSocket API and authenticate via the `auth` message. The WebSocket
+  // handshake has no CORS preflight and the token travels inside the JSON body
+  // (not an HTTP header), so this succeeds without any HA `cors_allowed_origins`
+  // config — exactly how the plugin talks to HA at runtime. REST is attempted
+  // only as a fallback if the socket can't be opened, and it WILL hit CORS
+  // unless configured, so its failure message hints at that.
   function testHAConnection(url, token) {
+    const base = (url || '').trim().replace(/\/+$/, '');
     return new Promise((resolve) => {
-      // Step 1 — verify REST auth + reachability
-      const t = setTimeout(() => resolve({ ok: false, error: 'Timeout (5s)' }), 5000);
-      fetch(url + '/api/', { headers: { 'Authorization': 'Bearer ' + token } })
-        .then(r => {
-          clearTimeout(t);
-          if (r.status === 401) return resolve({ ok: false, error: 'Token invalid (401)' });
-          if (!r.ok) return resolve({ ok: false, error: 'HTTP ' + r.status });
-          // Step 2 — count entities
-          return fetch(url + '/api/states', { headers: { 'Authorization': 'Bearer ' + token } })
-            .then(rr => rr.json())
-            .then(states => resolve({ ok: true, count: Array.isArray(states) ? states.length : 0 }));
-        })
-        .catch(err => {
-          clearTimeout(t);
-          resolve({ ok: false, error: 'Unreachable — ' + (err.message || 'network error') });
-        });
+      let done = false;
+      let restTried = false;
+      let ws = null;
+
+      const finish = (res) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try { if (ws) ws.close(); } catch (e) {}
+        resolve(res);
+      };
+
+      // REST fallback — only reached if the WebSocket cannot be established.
+      const tryRest = () => {
+        if (done || restTried) return;
+        restTried = true;
+        fetch(base + '/api/', { headers: { 'Authorization': 'Bearer ' + token } })
+          .then(r => {
+            if (r.status === 401) return finish({ ok: false, error: 'Token invalid (401)' });
+            if (!r.ok) return finish({ ok: false, error: 'HTTP ' + r.status });
+            return fetch(base + '/api/states', { headers: { 'Authorization': 'Bearer ' + token } })
+              .then(rr => rr.json())
+              .then(states => finish({ ok: true, count: Array.isArray(states) ? states.length : 0 }));
+          })
+          .catch(() => finish({
+            ok: false,
+            error: 'Unreachable — check URL/port (include http:// and :8123)'
+          }));
+      };
+
+      const timer = setTimeout(() => finish({ ok: false, error: 'Timeout (5s)' }), 5000);
+
+      const wsUrl = base.replace(/^http/, 'ws') + '/api/websocket';
+      try {
+        ws = new WebSocket(wsUrl);
+      } catch (e) {
+        return tryRest();
+      }
+
+      // If the socket fails to open at all, fall back to REST once.
+      ws.onerror = () => { if (!done && !restTried) tryRest(); };
+      ws.onclose = () => { if (!done && !restTried) tryRest(); };
+      ws.onmessage = (ev) => {
+        let msg;
+        try { msg = JSON.parse(ev.data); } catch (e) { return; }
+        if (msg.type === 'auth_required') {
+          ws.send(JSON.stringify({ type: 'auth', access_token: token }));
+        } else if (msg.type === 'auth_invalid') {
+          finish({ ok: false, error: 'Token invalid' });
+        } else if (msg.type === 'auth_ok') {
+          ws.send(JSON.stringify({ id: 1, type: 'get_states' }));
+        } else if (msg.type === 'result' && msg.id === 1) {
+          finish({
+            ok: !!msg.success,
+            count: Array.isArray(msg.result) ? msg.result.length : 0,
+            error: msg.success ? undefined : 'get_states failed'
+          });
+        }
+      };
     });
   }
 

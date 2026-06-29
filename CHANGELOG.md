@@ -5,6 +5,19 @@ All notable changes to HA Hub for UlanziDeck.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.12.1] - 2026-06-29
+
+### Fixed
+- **"Test connection" no longer fails with `Unreachable — Failed to fetch` on a
+  stock HA install.** The Property Inspector test previously made a cross-origin
+  REST call (`GET /api/`) with an `Authorization` header, which triggers a CORS
+  preflight that Home Assistant rejects unless `cors_allowed_origins` is
+  configured — so the button reported failure even when the plugin's runtime
+  (which uses the WebSocket API) connected fine. The test now connects over the
+  same HA **WebSocket API** the runtime uses (`auth` handshake →
+  `get_states`), which has no CORS preflight, so it succeeds out of the box. A
+  REST attempt remains only as a fallback if the socket can't be opened.
+
 ## [0.12.0] - 2026-06-29
 
 ### Added

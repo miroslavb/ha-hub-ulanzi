@@ -8,7 +8,7 @@
 > long-press to dial, multi-entity hubs, and a stylized HA logo reveal
 > when you switch pages.
 
-[![Version](https://img.shields.io/badge/version-0.12.0--beta-orange)](#)
+[![Version](https://img.shields.io/badge/version-0.12.1--beta-orange)](#)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![Status](https://img.shields.io/badge/status-beta-yellow)](#status)
 [![Ulanzi SDK](https://img.shields.io/badge/Ulanzi%20SDK-v2.1.2-green)](https://github.com/UlanziTechnology/UlanziDeckPlugin-SDK)
@@ -156,16 +156,17 @@ The Aggregate pulses when anything is active; the Folder lets you drill in.
 - **One token, all keys** — global connection, only enter once
 - **Friendly names** — the entity picker searches both `entity_id` and
   `friendly_name`, so typing "office" finds `switch.zb_plug_office`
-- **CORS for Test connection** — if "Test connection" fails with a CORS
-  error, add to your `configuration.yaml`:
+- **No CORS config needed** — both the runtime *and* the "Test connection"
+  button now talk to HA over the WebSocket API, which has no CORS preflight,
+  so a stock HA install works out of the box. The Test button only falls back
+  to REST if the WebSocket can't be opened at all; should you ever need that
+  fallback to pass, add to your `configuration.yaml` and restart HA:
   ```yaml
   http:
     cors_allowed_origins:
       - "null"
       - "file://"
   ```
-  Then restart HA. Note this is only for the Test button, the runtime
-  WebSocket connection works without CORS.
 
 ## Architecture
 
