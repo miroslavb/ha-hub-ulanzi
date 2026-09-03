@@ -3,7 +3,7 @@
   "Name": "HA Hub",
   "Description": "Home Assistant integration with live state, entity icons, encoders, and a D200X multi-light controller.",
   "Icon": "resources/plugin-icon.png",
-  "Version": "0.13.0",
+  "Version": "0.13.1",
   "UUID": "com.ulanzi.ulanzistudio.hahub",
   "Type": "JavaScript",
   "CodePath": "plugin/app.html",
@@ -139,7 +139,7 @@
       }
     },
     {
-      "Name": "HA Light Controller",
+      "Name": "HA Light Selector",
       "Icon": "resources/action-encoder.png",
       "UUID": "com.ulanzi.ulanzistudio.hahub.lightcontroller",
       "PropertyInspectorPath": "property-inspector/light-controller.html",
@@ -150,11 +150,22 @@
         }
       ],
       "Controllers": [
-        "Keypad",
-        "Encoder"
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "HA Light Controller",
+      "Icon": "resources/action-encoder.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.lightcontrollerencoder",
+      "PropertyInspectorPath": "property-inspector/light-controller.html",
+      "States": [
+        {
+          "Name": "Light Controller",
+          "Image": "resources/action-encoder.png"
+        }
       ],
-      "Devices": [
-        "D200X"
+      "Controllers": [
+        "Encoder"
       ],
       "Encoder": {
         "layout": "$UA1"

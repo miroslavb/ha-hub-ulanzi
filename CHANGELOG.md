@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.13.1] - 2026-09-03
+
+### Fixed
+- D200X now lists the light controller in the encoder tab. Studio receives two
+  dedicated, unfiltered actions: **HA Light Selector** for keys and **HA Light
+  Controller** for encoders. They still share one entity list and selection.
+- The shared Property Inspector now connects with Studio's current action UUID,
+  so it opens correctly from either surface.
+
 ## [0.13.0] - 2026-09-03
 
 ### Added

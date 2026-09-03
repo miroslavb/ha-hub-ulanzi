@@ -53,6 +53,7 @@ router.register(window.SensorAction);
 router.register(window.EncoderAction);
 router.register(window.SmartDialerAction);
 router.register(window.LightControllerAction);
+router.register(window.LightControllerEncoderAction);
 
 // Re-render every action when HA reconnects (entity states may have changed)
 haClient.addEventListener('connected', () => {

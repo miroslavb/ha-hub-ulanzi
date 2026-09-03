@@ -1,6 +1,6 @@
-// D200X light controller. The same action can be placed on a key and an
-// encoder: key press selects the next configured light; encoder press cycles
-// brightness -> colour temperature -> hue; rotation adjusts the active mode.
+// D200X light controller shared by two manifest actions: a keypad selector and
+// an encoder control. Key press selects the next configured light; encoder
+// press cycles brightness -> colour temperature -> hue; rotation adjusts it.
 
 class LightControllerAction {
   constructor(ctx) {
@@ -113,3 +113,11 @@ class LightControllerAction {
 }
 
 window.LightControllerAction = LightControllerAction;
+
+// Ulanzi Studio discovers encoder actions reliably only as a dedicated
+// Encoder-only manifest entry. Behaviour and global light selection stay shared.
+class LightControllerEncoderAction extends LightControllerAction {
+  static type() { return 'com.ulanzi.ulanzistudio.hahub.lightcontrollerencoder'; }
+}
+
+window.LightControllerEncoderAction = LightControllerEncoderAction;

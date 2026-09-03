@@ -7,7 +7,9 @@
   let pickerIndex = null;
   let availableLights = [];
 
-  $UD.connect('com.ulanzi.ulanzistudio.hahub.lightcontroller');
+  // Use the UUID provided by Studio so this shared PI works for both the
+  // keypad selector and the dedicated encoder action.
+  $UD.connect();
   PI.renderConnectionFields(document.getElementById('conn-fields'));
 
   function iconSvg(name) {

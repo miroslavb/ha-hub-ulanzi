@@ -132,13 +132,24 @@ await test('render includes entity position and selected channel value', () => {
   assert.equal(rendered.total, 2);
 });
 
-await test('manifest exposes one D200X action on both key and encoder surfaces', () => {
+await test('manifest exposes separate unfiltered key and encoder actions', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('../manifest.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.Version, '0.13.0');
-  const action = manifest.Actions.find(item => item.UUID.endsWith('.lightcontroller'));
-  assert.deepEqual(action.Controllers, ['Keypad', 'Encoder']);
-  assert.deepEqual(action.Devices, ['D200X']);
-  assert.equal(action.Encoder.layout, '$UA1');
+  assert.equal(manifest.Version, '0.13.1');
+  const keyAction = manifest.Actions.find(item => item.UUID.endsWith('.lightcontroller'));
+  const encoderAction = manifest.Actions.find(item => item.UUID.endsWith('.lightcontrollerencoder'));
+  assert.deepEqual(keyAction.Controllers, ['Keypad']);
+  assert.ok(!keyAction.Devices || keyAction.Devices.length === 0);
+  assert.deepEqual(encoderAction.Controllers, ['Encoder']);
+  assert.ok(!encoderAction.Devices || encoderAction.Devices.length === 0);
+  assert.equal(encoderAction.Encoder.layout, '$UA1');
+});
+
+await test('shared Property Inspector uses current action UUID and hotfix cache buster', () => {
+  const html = fs.readFileSync(new URL('../property-inspector/light-controller.html', import.meta.url), 'utf8');
+  const script = fs.readFileSync(new URL('../property-inspector/light-controller.js', import.meta.url), 'utf8');
+  assert.ok(!html.includes('v=0.13.0'));
+  assert.match(html, /light-controller\.js\?v=0\.13\.1/);
+  assert.match(script, /\$UD\.connect\(\);/);
 });
 
 console.log(`\n${passed} checks passed`);
