@@ -164,6 +164,79 @@ function renderSensor(opts) {
   return c.toDataURL('image/png').split(',')[1];
 }
 
+function hsToRgb(h, s) {
+  const sat = Math.max(0, Math.min(100, Number(s) || 0)) / 100;
+  const hue = ((Number(h) || 0) % 360 + 360) % 360;
+  const c = sat;
+  const x = c * (1 - Math.abs((hue / 60) % 2 - 1));
+  let rgb = hue < 60 ? [c, x, 0] : hue < 120 ? [x, c, 0] :
+    hue < 180 ? [0, c, x] : hue < 240 ? [0, x, c] :
+    hue < 300 ? [x, 0, c] : [c, 0, x];
+  const m = 1 - c;
+  return rgb.map(v => Math.round((v + m) * 255));
+}
+
+// Approximation used only for on-deck feedback when HA exposes a CCT light.
+function kelvinToRgb(kelvin) {
+  const t = Math.max(1000, Math.min(40000, Number(kelvin) || 4000)) / 100;
+  let r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
+  let g = t <= 66
+    ? 99.4708025861 * Math.log(t) - 161.1195681661
+    : 288.1221695283 * Math.pow(t - 60, -0.0755148492);
+  let b = t >= 66 ? 255 : (t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.044792731);
+  return [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))));
+}
+
+function lightColor(entity) {
+  const attrs = entity?.attributes || {};
+  if (Array.isArray(attrs.rgb_color)) return attrs.rgb_color.slice(0, 3);
+  if (Array.isArray(attrs.hs_color)) return hsToRgb(attrs.hs_color[0], attrs.hs_color[1]);
+  const kelvin = attrs.color_temp_kelvin || (attrs.color_temp ? 1000000 / attrs.color_temp : null);
+  return kelvin ? kelvinToRgb(kelvin) : [250, 204, 21];
+}
+
+// Lovelace-style light feedback: state-aware icon shape, actual light colour
+// while on, neutral icon while off, live channel value, and brightness bar.
+function renderLightController(opts) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  const entity = opts.entity;
+  const unavailable = !entity || ['unavailable', 'unknown'].includes(entity.state);
+  const on = entity?.state === 'on';
+  const rgb = on ? lightColor(entity) : [100, 116, 139];
+  const accent = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+  fillBackground(ctx, '#111827');
+
+  ctx.fillStyle = unavailable ? '#3f1d27' : (on ? `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.18)` : '#1f2937');
+  ctx.beginPath();
+  ctx.arc(ICON_SIZE / 2, 49, 38, 0, Math.PI * 2);
+  ctx.fill();
+
+  const drawn = drawMdiIcon(ctx, opts.iconName || 'lightbulb', ICON_SIZE / 2, 49, 58,
+    unavailable ? '#f87171' : accent, on ? 1 : 0.72);
+  if (!drawn) drawCenteredText(ctx, on ? 'ON' : 'OFF', 49, accent, 28, 'bold');
+
+  drawCenteredText(ctx, String(opts.label || '').slice(0, 15), 96, '#f8fafc', 15, 'bold');
+  const modeNames = { brightness: 'BRI', color_temp: 'TEMP', color: 'HUE' };
+  let value = 'NO CONTROL';
+  if (unavailable) value = 'UNAVAILABLE';
+  else if (opts.mode === 'brightness') value = `${Math.round(opts.value || 0)}%`;
+  else if (opts.mode === 'color_temp') value = `${Math.round(opts.value || 0)}K`;
+  else if (opts.mode === 'color') value = `${Math.round(opts.value || 0)}°`;
+  const pos = opts.total ? `  ${opts.position}/${opts.total}` : '';
+  drawCenteredText(ctx, `${modeNames[opts.mode] || ''} ${value}${pos}`.trim(), 117,
+    unavailable ? '#f87171' : '#cbd5e1', 12, 'bold');
+
+  if (opts.mode === 'brightness' && !unavailable) {
+    const pct = Math.max(0, Math.min(100, Number(opts.value) || 0));
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(10, 133, 124, 5);
+    ctx.fillStyle = accent;
+    ctx.fillRect(10, 133, 124 * pct / 100, 5);
+  }
+  return c.toDataURL('image/png').split(',')[1];
+}
+
 // Render a scene/script trigger icon (no toggle state, just label).
 function renderTrigger(opts) {
   const { label, theme, color } = opts;
@@ -433,4 +506,4 @@ function renderRevealFrame(progress) {
 }
 
 // Re-export with reveal added
-window.IconRenderer = { renderState, renderSensor, renderTrigger, renderAggregate, renderEditMode, renderRevealFrame, renderPuzzlePiece, mixColors };
+window.IconRenderer = { renderState, renderSensor, renderLightController, renderTrigger, renderAggregate, renderEditMode, renderRevealFrame, renderPuzzlePiece, mixColors };

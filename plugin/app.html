@@ -17,6 +17,7 @@
   <script src="long-press.js"></script>
   <script src="pulse-manager.js"></script>
   <script src="edit-mode-manager.js"></script>
+  <script src="light-controller-store.js"></script>
   <script src="reveal-animator.js"></script>
   <script src="settings.js"></script>
   <script src="action-router.js"></script>
@@ -28,6 +29,7 @@
   <script src="action-sensor.js"></script>
   <script src="action-encoder.js"></script>
   <script src="action-smartdialer.js"></script>
+  <script src="action-light-controller.js"></script>
 </head>
 <body>
 <script>
@@ -38,9 +40,10 @@ const settings = new window.HASettings();
 const longPress = new window.LongPressDetector(700);
 const pulse = new window.PulseManager();
 const editMode = new window.EditModeManager();
+const lightController = new window.LightControllerStore();
 const reveal = new window.RevealAnimator();
 
-const router = new window.ActionRouter({ client: haClient, cache, settings, pulse, editMode });
+const router = new window.ActionRouter({ client: haClient, cache, settings, pulse, editMode, lightController });
 router.register(window.ToggleAction);
 router.register(window.SmartToggleAction);
 router.register(window.AggregateAction);
@@ -49,6 +52,7 @@ router.register(window.ServiceAction);
 router.register(window.SensorAction);
 router.register(window.EncoderAction);
 router.register(window.SmartDialerAction);
+router.register(window.LightControllerAction);
 
 // Re-render every action when HA reconnects (entity states may have changed)
 haClient.addEventListener('connected', () => {
@@ -84,7 +88,16 @@ $UD.onConnected(() => {
 });
 
 // Cache of global URL+token + UI prefs. Pushed to PIs that ask for it.
-let globalConnection = { haUrl: '', token: '', revealEnabled: true, revealMode: 'per-tile' };
+let globalConnection = {
+  haUrl: '', token: '', revealEnabled: true, revealMode: 'per-tile',
+  lightController: lightController.serialize()
+};
+
+function persistLightController() {
+  globalConnection.lightController = lightController.serialize();
+  $UD.setGlobalSettings && $UD.setGlobalSettings(globalConnection);
+}
+lightController.addEventListener('selection-changed', persistLightController);
 
 $UD.onDidReceiveGlobalSettings && $UD.onDidReceiveGlobalSettings((message) => {
   const data = message.payload || message.param || {};
@@ -92,6 +105,10 @@ $UD.onDidReceiveGlobalSettings && $UD.onDidReceiveGlobalSettings((message) => {
   if (data.token) globalConnection.token = data.token;
   if (data.revealEnabled !== undefined) globalConnection.revealEnabled = !!data.revealEnabled;
   if (data.revealMode) globalConnection.revealMode = data.revealMode;
+  if (data.lightController) {
+    globalConnection.lightController = data.lightController;
+    lightController.configure(data.lightController);
+  }
   reveal.setEnabled(globalConnection.revealEnabled);
   reveal.setPuzzleMode(globalConnection.revealMode === 'puzzle');
   if (globalConnection.haUrl && globalConnection.token) {
@@ -199,6 +216,22 @@ $UD.onSendToPlugin((message) => {
       __type: 'key-settings',
       settings: stored
     }, message.context);
+    return;
+  }
+
+  if (data.__type === 'get-light-controller') {
+    $UD.sendToPropertyInspector({
+      __type: 'light-controller',
+      config: lightController.serialize(),
+      lights: cache.searchSummary(['light'], '')
+    }, message.context);
+    return;
+  }
+
+  if (data.__type === 'set-light-controller') {
+    applyConnection(data);
+    lightController.configure(data.config || {});
+    persistLightController();
     return;
   }
 

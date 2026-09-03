@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.13.0] - 2026-09-03
+
+### Added
+- **HA Light Controller** for D200X, usable on both an LCD key and an encoder.
+  The key cycles a Studio-configured list of lights; the encoder rotates the
+  active value and its press cycles only supported channels in this order:
+  brightness, colour temperature, hue.
+- Shared light/entity/icon configuration with searchable HA entities and the
+  bundled offline MDI catalogue. `HA auto` follows the entity's explicit or
+  state-dependent Home Assistant icon.
+- Lovelace-style live feedback: off/unavailable state, actual RGB/HS/CCT colour,
+  brightness percentage, Kelvin/hue value, and selected entity position.
+
+### Changed
+- Light colour-temperature calls now use Home Assistant's preferred
+  `color_temp_kelvin` service field; legacy mired attributes remain readable.
+
 All notable changes to HA Hub for UlanziDeck.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),

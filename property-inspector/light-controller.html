@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HA Light Controller</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css">
+  <link rel="stylesheet" href="_shared.css?v=0.13.0">
+  <style>
+    .lc-heading { margin: 12px 10px 6px; color: #aab2bd; font-size: 11px; text-transform: uppercase; }
+    .lc-row { display: grid; grid-template-columns: 82px minmax(0,1fr) 34px 26px; gap: 5px; padding: 3px 10px; }
+    .lc-row input { min-width: 0; width: 100%; box-sizing: border-box; background: #252525; color: #eee; border: 1px solid #555; border-radius: 4px; padding: 5px 7px; }
+    .lc-icon, .lc-delete { height: 28px; border: 1px solid #555; border-radius: 4px; background: #252525; color: #eee; padding: 0; cursor: pointer; }
+    .lc-delete { color: #f87171; }
+    .lc-icon svg, .lc-grid svg { width: 20px; height: 20px; fill: #eee; }
+    #lc-add { margin: 6px 10px; }
+    #lc-icon-panel { margin: 6px 10px 12px; padding: 8px; border: 1px solid #555; border-radius: 7px; background: #191919; }
+    #lc-icon-panel.hidden { display: none; }
+    .lc-panel-head { display: flex; gap: 6px; margin-bottom: 7px; }
+    #lc-icon-search { min-width: 0; flex: 1; background: #252525; color: #eee; border: 1px solid #555; border-radius: 4px; padding: 5px; }
+    .lc-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; max-height: 220px; overflow: auto; }
+    .lc-grid button { height: 38px; background: #252525; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
+    .lc-grid button:hover, .lc-grid button.selected { border-color: #03a9f4; background: #123447; }
+    .lc-hint { margin: 8px 10px 14px; color: #999; font-size: 11px; line-height: 1.45; }
+  </style>
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="_shared.js?v=0.13.0"></script>
+  <script src="../plugin/mdi-icons.js?v=0.13.0"></script>
+</head>
+<body>
+<div class="uspi-wrapper">
+  <form id="light-controller-form" onsubmit="return false;">
+    <div id="conn-fields"></div>
+
+    <div class="lc-heading">Lights (shared by key + encoder)</div>
+    <datalist id="lc-entities"></datalist>
+    <div id="lc-rows"></div>
+    <button type="button" class="hahub-btn" id="lc-add">+ Add light</button>
+
+    <div id="lc-icon-panel" class="hidden">
+      <div class="lc-panel-head">
+        <input id="lc-icon-search" type="text" placeholder="Search Material Design Icons…">
+        <button type="button" class="hahub-btn" id="lc-icon-auto">HA auto</button>
+        <button type="button" class="hahub-btn" id="lc-icon-close">Close</button>
+      </div>
+      <div id="lc-icon-grid" class="lc-grid"></div>
+    </div>
+
+    <div class="lc-heading">Encoder steps</div>
+    <div class="uspi-item"><div class="uspi-item-label">Brightness</div><input class="uspi-item-value" name="brightnessStep" type="number" min="1" max="25" value="5"></div>
+    <div class="uspi-item"><div class="uspi-item-label">Temperature</div><input class="uspi-item-value" name="temperatureStep" type="number" min="50" max="1000" step="50" value="250"></div>
+    <div class="uspi-item"><div class="uspi-item-label">Hue</div><input class="uspi-item-value" name="hueStep" type="number" min="1" max="90" value="10"></div>
+
+    <div class="lc-hint">
+      Put this action on one LCD key and one D200X encoder. Key press selects the
+      next light. Encoder press cycles only supported channels: brightness → colour
+      temperature → hue. Rotation changes the selected channel. “HA auto” uses the
+      same state-dependent entity icon as Home Assistant.
+    </div>
+  </form>
+</div>
+<script src="light-controller.js?v=0.13.0"></script>
+</body>
+</html>

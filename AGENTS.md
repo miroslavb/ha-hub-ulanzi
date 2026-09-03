@@ -1,0 +1,14 @@
+# HA Hub Ulanzi operating notes
+
+- Keep Home Assistant communication on the WebSocket API; the Property
+  Inspector's `file://` origin makes authenticated REST probes hit CORS.
+- The D200X Light Controller configuration is plugin-global so a keypad action
+  and an encoder action always operate on the same selected entity.
+- Derive available light channels from `supported_color_modes`; never offer
+  colour temperature or hue to entities that do not advertise them.
+- Use modern Kelvin service data (`color_temp_kelvin`) while accepting legacy
+  mired state attributes for display compatibility.
+- `auto` icons resolve through HA's entity/device-class/state mapping. Custom
+  icons must remain local MDI names; no network icon dependency is allowed.
+- Run `node test/test-light-controller.mjs` and validate `manifest.json` after
+  controller, rendering, event-routing, or settings changes.

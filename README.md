@@ -8,7 +8,7 @@
 > long-press to dial, multi-entity hubs, and a stylized HA logo reveal
 > when you switch pages.
 
-[![Version](https://img.shields.io/badge/version-0.12.1--beta-orange)](#)
+[![Version](https://img.shields.io/badge/version-0.13.0--beta-orange)](#)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![Status](https://img.shields.io/badge/status-beta-yellow)](#status)
 [![Ulanzi SDK](https://img.shields.io/badge/Ulanzi%20SDK-v2.1.2-green)](https://github.com/UlanziTechnology/UlanziDeckPlugin-SDK)
@@ -24,8 +24,8 @@ pulse when something is active.
 ## Highlights
 
 - **Live state**, no polling — HA's `state-changed` events drive every render
-- **8 action types** covering toggles, scenes, services, sensors, encoders,
-  and two more (Smart Toggle, Smart Dialer, Aggregate) that don't exist
+- **9 action types** covering toggles, scenes, services, sensors, encoders,
+  and advanced controls (Smart Toggle, Smart Dialer, Aggregate, Light Controller)
   elsewhere
 - **Long-press → Smart Dialer**: hold any light/climate/cover/media_player
   key for 700 ms, then turn the dial — works for every device with a single
@@ -52,6 +52,7 @@ pulse when something is active.
 | **HA Sensor** | Read-only display of any sensor with optional thresholds for warning colors. |
 | **HA Encoder** | Rotary dial bound to one entity (brightness, volume, temperature, numeric). |
 | **HA Smart Dialer** | Universal dial: long-press any HA Toggle / Smart Toggle on a light/climate/cover/media_player/fan, then rotate this dial to adjust the matching property. |
+| **HA Light Controller** | D200X key + encoder pair. The key cycles configured lights; dial press cycles supported brightness / colour-temperature / hue channels; rotation adjusts the live value. |
 
 ## Entity icons
 
@@ -79,8 +80,8 @@ The complete Material Design Icons set (v7.x) is bundled with the plugin, so
 
 ## Status
 
-**0.12.0 beta.** Tested on UlanziDeck D200X with Home Assistant Core 2026.x
-on a single home setup. Eight action types, optional standard HA entity icons,
+**0.13.0 beta.** Built for UlanziDeck D200X with Home Assistant Core 2026.x.
+Nine action types, optional standard HA entity icons,
 ~20 SDK quirks worked through, solid for daily use. Real-world testing on
 diverse setups is still in progress — please report issues with reproduction
 steps.
@@ -129,6 +130,22 @@ below the LCD keys on D200X). Then on any HA Toggle key with a
 5. **Tap** the source key to confirm, or wait 15 s for auto-exit
 
 One dial controls every dimmable / variable entity in your HA install.
+
+## D200X Light Controller
+
+Place **HA Light Controller** once on an LCD key and once on an encoder. Its
+configuration is shared globally between both placements:
+
+1. Add `light.*` entities in the Property Inspector, with an optional label and
+   either **HA auto** or any bundled Material Design Icon.
+2. Press the LCD key to select the next configured entity.
+3. Rotate the encoder to adjust the current channel.
+4. Press the encoder to cycle only channels supported by that light:
+   brightness → colour temperature → hue.
+
+The tile follows live HA state. Auto icons use HA's state-aware icon mapping;
+when the light is on, the icon reflects its RGB/HS/CCT colour, and the footer
+shows brightness, Kelvin, or hue exactly for the active channel.
 
 ## Aggregate + Folder pattern
 

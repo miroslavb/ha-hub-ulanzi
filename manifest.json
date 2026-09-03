@@ -1,9 +1,9 @@
 {
   "Author": "Bart",
   "Name": "HA Hub",
-  "Description": "Home Assistant integration with live state, entity picker, pulse animations, long-press edit mode, and 8 action types: Toggle, Smart Toggle, Aggregate, Scene, Service Call, Sensor, Encoder, Smart Dialer.",
+  "Description": "Home Assistant integration with live state, entity icons, encoders, and a D200X multi-light controller.",
   "Icon": "resources/plugin-icon.png",
-  "Version": "0.12.1",
+  "Version": "0.13.0",
   "UUID": "com.ulanzi.ulanzistudio.hahub",
   "Type": "JavaScript",
   "CodePath": "plugin/app.html",
@@ -133,6 +133,28 @@
       ],
       "Controllers": [
         "Encoder"
+      ],
+      "Encoder": {
+        "layout": "$UA1"
+      }
+    },
+    {
+      "Name": "HA Light Controller",
+      "Icon": "resources/action-encoder.png",
+      "UUID": "com.ulanzi.ulanzistudio.hahub.lightcontroller",
+      "PropertyInspectorPath": "property-inspector/light-controller.html",
+      "States": [
+        {
+          "Name": "Light Controller",
+          "Image": "resources/action-encoder.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Devices": [
+        "D200X"
       ],
       "Encoder": {
         "layout": "$UA1"
