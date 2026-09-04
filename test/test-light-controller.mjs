@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import zlib from 'node:zlib';
 
 global.window = {};
 global.CustomEvent = class CustomEvent extends Event {
@@ -39,13 +40,14 @@ const dimmer = {
   attributes: { friendly_name: 'Ceiling', brightness: 255, supported_color_modes: ['brightness'] }
 };
 
-function fixture() {
+function fixture(ActionClass = window.LightControllerAction, config = {}) {
   const store = new window.LightControllerStore();
   store.configure({
     items: [
       { entityId: 'light.desk', label: 'Desk lamp', icon: 'auto' },
       { entityId: 'light.ceiling', label: 'Ceiling', icon: 'ceiling-light' }
-    ], brightnessStep: 5, temperatureStep: 250, hueStep: 10
+    ], brightnessStep: 5, temperatureStep: 250, hueStep: 10,
+    ...config
   });
   const entities = new Map([[rgbLight.entity_id, structuredClone(rgbLight)], [dimmer.entity_id, structuredClone(dimmer)]]);
   const cache = new EventTarget();
@@ -57,7 +59,7 @@ function fixture() {
       return true;
     }
   };
-  const action = new window.LightControllerAction('ctx');
+  const action = new ActionClass('ctx');
   action.attach({ lightController: store, cache, client });
   return { store, entities, cache, client, action };
 }
@@ -77,6 +79,12 @@ await test('global configuration round-trips the selected entity and step sizes'
   assert.equal(restored.brightnessStep, 5);
   assert.equal(restored.temperatureStep, 250);
   assert.equal(restored.hueStep, 10);
+});
+
+await test('encoder feedback preference round-trips as disabled', () => {
+  const { store } = fixture(window.LightControllerAction, { showEncoderFeedback: false });
+  assert.equal(store.showEncoderFeedback, false);
+  assert.equal(store.serialize().showEncoderFeedback, false);
 });
 
 await test('key press selects the next configured light', () => {
@@ -132,9 +140,28 @@ await test('render includes entity position and selected channel value', () => {
   assert.equal(rendered.total, 2);
 });
 
+await test('disabled encoder feedback clears the wide-screen slot', () => {
+  $UD.icons.length = 0;
+  const { action } = fixture(window.LightControllerEncoderAction, { showEncoderFeedback: false });
+  action.render();
+  const pngBase64 = window.LightControllerEncoderAction.BLANK_FEEDBACK;
+  assert.equal($UD.icons.at(-1).data, pngBase64);
+  const png = Buffer.from(pngBase64, 'base64');
+  let offset = 8;
+  const idat = [];
+  while (offset < png.length) {
+    const length = png.readUInt32BE(offset);
+    const type = png.toString('ascii', offset + 4, offset + 8);
+    if (type === 'IDAT') idat.push(png.subarray(offset + 8, offset + 8 + length));
+    offset += length + 12;
+  }
+  assert.deepEqual([...zlib.inflateSync(Buffer.concat(idat))], [0, 0, 0, 0, 0],
+    'blank frame must be one transparent RGBA pixel');
+});
+
 await test('manifest exposes separate unfiltered key and encoder actions', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('../manifest.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.Version, '0.13.1');
+  assert.equal(manifest.Version, '0.13.2');
   const keyAction = manifest.Actions.find(item => item.UUID.endsWith('.lightcontroller'));
   const encoderAction = manifest.Actions.find(item => item.UUID.endsWith('.lightcontrollerencoder'));
   assert.deepEqual(keyAction.Controllers, ['Keypad']);
@@ -147,9 +174,25 @@ await test('manifest exposes separate unfiltered key and encoder actions', () =>
 await test('shared Property Inspector uses current action UUID and hotfix cache buster', () => {
   const html = fs.readFileSync(new URL('../property-inspector/light-controller.html', import.meta.url), 'utf8');
   const script = fs.readFileSync(new URL('../property-inspector/light-controller.js', import.meta.url), 'utf8');
-  assert.ok(!html.includes('v=0.13.0'));
-  assert.match(html, /light-controller\.js\?v=0\.13\.1/);
+  assert.ok(!html.includes('v=0.13.1'));
+  assert.match(html, /light-controller\.js\?v=0\.13\.2/);
   assert.match(script, /\$UD\.connect\(\);/);
+});
+
+await test('PI save-state sync preserves row object identity', () => {
+  const helperUrl = new URL('../property-inspector/light-controller-state.js', import.meta.url);
+  assert.ok(fs.existsSync(helperUrl), 'PI state helper must exist');
+  vm.runInThisContext(fs.readFileSync(helperUrl, 'utf8'), { filename: 'light-controller-state.js' });
+  const row = { entityId: '', label: '', icon: 'auto' };
+  const state = { items: [row], selectedIndex: 0 };
+  window.LightControllerPIState.applyScalarConfig(state, {
+    items: [{ entityId: 'light.desk', label: 'Desk', icon: 'auto' }],
+    selectedIndex: 0, brightnessStep: 7, temperatureStep: 300, hueStep: 15,
+    showEncoderFeedback: false
+  });
+  assert.equal(state.items[0], row, 'save must not replace objects captured by row listeners');
+  assert.equal(state.brightnessStep, 7);
+  assert.equal(state.showEncoderFeedback, false);
 });
 
 console.log(`\n${passed} checks passed`);

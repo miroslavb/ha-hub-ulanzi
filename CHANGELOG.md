@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.13.2] - 2026-09-04
+
+### Fixed
+- Adding and editing multiple Light Selector entities no longer loses later
+  field changes. Saving now preserves the row objects captured by DOM handlers.
+
+### Added
+- **Wide-screen feedback** checkbox. Disable it to keep the D200X encoder slot
+  blank while retaining all encoder controls.
+
 ## [0.13.1] - 2026-09-03
 
 ### Fixed

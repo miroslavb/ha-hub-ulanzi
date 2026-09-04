@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>HA Light Controller</title>
   <link rel="stylesheet" href="../libs/css/uspi.css">
-  <link rel="stylesheet" href="_shared.css?v=0.13.1">
+  <link rel="stylesheet" href="_shared.css?v=0.13.2">
   <style>
     .lc-heading { margin: 12px 10px 6px; color: #aab2bd; font-size: 11px; text-transform: uppercase; }
     .lc-row { display: grid; grid-template-columns: 82px minmax(0,1fr) 34px 26px; gap: 5px; padding: 3px 10px; }
@@ -27,8 +27,9 @@
   <script src="../libs/js/timers.js"></script>
   <script src="../libs/js/utils.js"></script>
   <script src="../libs/js/ulanziApi.js"></script>
-  <script src="_shared.js?v=0.13.1"></script>
-  <script src="../plugin/mdi-icons.js?v=0.13.1"></script>
+  <script src="_shared.js?v=0.13.2"></script>
+  <script src="../plugin/mdi-icons.js?v=0.13.2"></script>
+  <script src="light-controller-state.js?v=0.13.2"></script>
 </head>
 <body>
 <div class="uspi-wrapper">
@@ -53,6 +54,15 @@
     <div class="uspi-item"><div class="uspi-item-label">Brightness</div><input class="uspi-item-value" name="brightnessStep" type="number" min="1" max="25" value="5"></div>
     <div class="uspi-item"><div class="uspi-item-label">Temperature</div><input class="uspi-item-value" name="temperatureStep" type="number" min="50" max="1000" step="50" value="250"></div>
     <div class="uspi-item"><div class="uspi-item-label">Hue</div><input class="uspi-item-value" name="hueStep" type="number" min="1" max="90" value="10"></div>
+    <div class="uspi-item">
+      <div class="uspi-item-label">Wide-screen feedback</div>
+      <div class="uspi-item-value">
+        <div class="uspi-item-child">
+          <input id="showEncoderFeedback" name="showEncoderFeedback" type="checkbox" checked>
+          <label for="showEncoderFeedback" class="uspi-item-label"><span></span></label>
+        </div>
+      </div>
+    </div>
 
     <div class="lc-hint">
       Put this action on one LCD key and one D200X encoder. Key press selects the
@@ -62,6 +72,6 @@
     </div>
   </form>
 </div>
-<script src="light-controller.js?v=0.13.1"></script>
+<script src="light-controller.js?v=0.13.2"></script>
 </body>
 </html>

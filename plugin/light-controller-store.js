@@ -11,6 +11,7 @@ class LightControllerStore extends EventTarget {
     this.brightnessStep = 5;
     this.temperatureStep = 250;
     this.hueStep = 10;
+    this.showEncoderFeedback = true;
     this.optimistic = null;
   }
 
@@ -30,6 +31,11 @@ class LightControllerStore extends EventTarget {
     this.brightnessStep = this._bounded(c.brightnessStep, 1, 25, 5);
     this.temperatureStep = this._bounded(c.temperatureStep, 50, 1000, 250);
     this.hueStep = this._bounded(c.hueStep, 1, 90, 10);
+    this.showEncoderFeedback = !(
+      c.showEncoderFeedback === false ||
+      c.showEncoderFeedback === 'false' ||
+      c.showEncoderFeedback === 'off'
+    );
     this.modeIndex = 0;
     this.optimistic = null;
     this._emit('changed');
@@ -46,7 +52,8 @@ class LightControllerStore extends EventTarget {
       selectedIndex: this.selectedIndex,
       brightnessStep: this.brightnessStep,
       temperatureStep: this.temperatureStep,
-      hueStep: this.hueStep
+      hueStep: this.hueStep,
+      showEncoderFeedback: this.showEncoderFeedback
     };
   }
 

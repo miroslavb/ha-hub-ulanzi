@@ -7,6 +7,10 @@
 - Keep keypad and encoder controls as separate manifest actions without a
   `Devices` filter. D200X Studio drops filtered/dual-surface custom actions from
   the encoder action list even though the public SDK describes that shape.
+- PI save logic must preserve `state.items` object identity between renders;
+  row listeners close over those objects. Replace scalar settings only.
+- Disabling encoder feedback must actively paint the slot transparent; merely
+  skipping future renders leaves the previously drawn frame visible.
 - Derive available light channels from `supported_color_modes`; never offer
   colour temperature or hue to entities that do not advertise them.
 - Use modern Kelvin service data (`color_temp_kelvin`) while accepting legacy

@@ -2,6 +2,9 @@
 // an encoder control. Key press selects the next configured light; encoder
 // press cycles brightness -> colour temperature -> hue; rotation adjusts it.
 
+// Valid 1×1 RGBA PNG whose pixel alpha is zero.
+const BLANK_ENCODER_FEEDBACK = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGNgAAIAAAUAAXpeqz8AAAAASUVORK5CYII=';
+
 class LightControllerAction {
   constructor(ctx) {
     this.context = ctx;
@@ -38,8 +41,14 @@ class LightControllerAction {
     return item ? this.deps.cache.get(item.entityId) : null;
   }
 
+  isEncoderSurface() { return false; }
+
   render() {
     const store = this.deps.lightController;
+    if (this.isEncoderSurface() && !store.showEncoderFeedback) {
+      $UD.setBaseDataIcon(this.context, BLANK_ENCODER_FEEDBACK, '');
+      return;
+    }
     const item = store.currentItem();
     const entity = this.entity();
     const mode = store.currentMode(entity);
@@ -118,6 +127,9 @@ window.LightControllerAction = LightControllerAction;
 // Encoder-only manifest entry. Behaviour and global light selection stay shared.
 class LightControllerEncoderAction extends LightControllerAction {
   static type() { return 'com.ulanzi.ulanzistudio.hahub.lightcontrollerencoder'; }
+  isEncoderSurface() { return true; }
 }
+
+LightControllerEncoderAction.BLANK_FEEDBACK = BLANK_ENCODER_FEEDBACK;
 
 window.LightControllerEncoderAction = LightControllerEncoderAction;

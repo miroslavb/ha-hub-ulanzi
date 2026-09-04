@@ -8,7 +8,7 @@
 > long-press to dial, multi-entity hubs, and a stylized HA logo reveal
 > when you switch pages.
 
-[![Version](https://img.shields.io/badge/version-0.13.1--beta-orange)](#)
+[![Version](https://img.shields.io/badge/version-0.13.2--beta-orange)](#)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![Status](https://img.shields.io/badge/status-beta-yellow)](#status)
 [![Ulanzi SDK](https://img.shields.io/badge/Ulanzi%20SDK-v2.1.2-green)](https://github.com/UlanziTechnology/UlanziDeckPlugin-SDK)
@@ -81,7 +81,7 @@ The complete Material Design Icons set (v7.x) is bundled with the plugin, so
 
 ## Status
 
-**0.13.1 beta.** Built for UlanziDeck D200X with Home Assistant Core 2026.x.
+**0.13.2 beta.** Built for UlanziDeck D200X with Home Assistant Core 2026.x.
 Ten action types, optional standard HA entity icons,
 ~20 SDK quirks worked through, solid for daily use. Real-world testing on
 diverse setups is still in progress — please report issues with reproduction
@@ -143,6 +143,9 @@ encoder. Their configuration is shared globally:
 3. Rotate the encoder to adjust the current channel.
 4. Press the encoder to cycle only channels supported by that light:
    brightness → colour temperature → hue.
+
+Disable **Wide-screen feedback** in the shared settings if you want the encoder
+slot to stay visually blank while rotation and press controls remain active.
 
 The tile follows live HA state. Auto icons use HA's state-aware icon mapping;
 when the light is on, the icon reflects its RGB/HS/CCT colour, and the footer

@@ -2,7 +2,8 @@
   const PI = window.HAHubPI;
   const MDI = window.MDI_ICONS || {};
   const state = {
-    items: [], selectedIndex: 0, brightnessStep: 5, temperatureStep: 250, hueStep: 10
+    items: [], selectedIndex: 0, brightnessStep: 5, temperatureStep: 250, hueStep: 10,
+    showEncoderFeedback: true
   };
   let pickerIndex = null;
   let availableLights = [];
@@ -120,14 +121,15 @@
       selectedIndex: state.selectedIndex,
       brightnessStep: numeric('brightnessStep', 5),
       temperatureStep: numeric('temperatureStep', 250),
-      hueStep: numeric('hueStep', 10)
+      hueStep: numeric('hueStep', 10),
+      showEncoderFeedback: !!document.querySelector('[name="showEncoderFeedback"]').checked
     };
   }
 
   function saveNow() {
     const form = document.getElementById('light-controller-form');
     const config = configFromUi();
-    Object.assign(state, config);
+    window.LightControllerPIState.applyScalarConfig(state, config);
     $UD.sendToPlugin({
       __type: 'set-light-controller',
       config,
@@ -146,9 +148,13 @@
     state.brightnessStep = Number.parseInt(c.brightnessStep, 10) || 5;
     state.temperatureStep = Number.parseInt(c.temperatureStep, 10) || 250;
     state.hueStep = Number.parseInt(c.hueStep, 10) || 10;
+    state.showEncoderFeedback = !(
+      c.showEncoderFeedback === false || c.showEncoderFeedback === 'false' || c.showEncoderFeedback === 'off'
+    );
     document.querySelector('[name="brightnessStep"]').value = state.brightnessStep;
     document.querySelector('[name="temperatureStep"]').value = state.temperatureStep;
     document.querySelector('[name="hueStep"]').value = state.hueStep;
+    document.querySelector('[name="showEncoderFeedback"]').checked = state.showEncoderFeedback;
     availableLights = Array.isArray(lights) ? lights : availableLights;
     renderEntityList();
     renderRows();
