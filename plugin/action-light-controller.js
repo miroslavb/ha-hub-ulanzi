@@ -128,6 +128,21 @@ window.LightControllerAction = LightControllerAction;
 class LightControllerEncoderAction extends LightControllerAction {
   static type() { return 'com.ulanzi.ulanzistudio.hahub.lightcontrollerencoder'; }
   isEncoderSurface() { return true; }
+
+  async onDialDown() {
+    if (this.deps.refreshLightController) await this.deps.refreshLightController();
+    return super.onDialDown();
+  }
+
+  async onDialRotateLeft() {
+    if (this.deps.refreshLightController) await this.deps.refreshLightController();
+    return super.onDialRotateLeft();
+  }
+
+  async onDialRotateRight() {
+    if (this.deps.refreshLightController) await this.deps.refreshLightController();
+    return super.onDialRotateRight();
+  }
 }
 
 LightControllerEncoderAction.BLANK_FEEDBACK = BLANK_ENCODER_FEEDBACK;

@@ -87,6 +87,14 @@ await test('encoder feedback preference round-trips as disabled', () => {
   assert.equal(store.serialize().showEncoderFeedback, false);
 });
 
+await test('host refresh preserves channel when selected entity is unchanged', () => {
+  const { store } = fixture();
+  store.cycleMode(rgbLight);
+  assert.equal(store.currentMode(rgbLight), 'color_temp');
+  store.configure(store.serialize(), { preserveMode: true });
+  assert.equal(store.currentMode(rgbLight), 'color_temp');
+});
+
 await test('key press selects the next configured light', () => {
   const { store, action } = fixture();
   assert.equal(store.currentItem().entityId, 'light.desk');
@@ -112,6 +120,18 @@ await test('encoder changes brightness using brightness_pct', async () => {
     domain: 'light', service: 'turn_on', data: { brightness_pct: 55 },
     target: { entity_id: 'light.desk' }
   });
+});
+
+await test('encoder refreshes host-global selection before control', async () => {
+  const { store, client, action } = fixture(window.LightControllerEncoderAction);
+  let refreshed = false;
+  action.deps.refreshLightController = async () => {
+    refreshed = true;
+    store.selectNext();
+  };
+  await action.onDialRotateRight();
+  assert.equal(refreshed, true);
+  assert.equal(client.calls.at(-1).target.entity_id, 'light.ceiling');
 });
 
 await test('temperature channel uses Kelvin and entity bounds', async () => {
@@ -161,7 +181,7 @@ await test('disabled encoder feedback clears the wide-screen slot', () => {
 
 await test('manifest exposes separate unfiltered key and encoder actions', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('../manifest.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.Version, '0.13.2');
+  assert.equal(manifest.Version, '0.13.3');
   const keyAction = manifest.Actions.find(item => item.UUID.endsWith('.lightcontroller'));
   const encoderAction = manifest.Actions.find(item => item.UUID.endsWith('.lightcontrollerencoder'));
   assert.deepEqual(keyAction.Controllers, ['Keypad']);

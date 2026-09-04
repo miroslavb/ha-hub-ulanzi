@@ -3,7 +3,7 @@
   "Name": "HA Hub",
   "Description": "Home Assistant integration with live state, entity icons, encoders, and a D200X multi-light controller.",
   "Icon": "resources/plugin-icon.png",
-  "Version": "0.13.2",
+  "Version": "0.13.3",
   "UUID": "com.ulanzi.ulanzistudio.hahub",
   "Type": "JavaScript",
   "CodePath": "plugin/app.html",

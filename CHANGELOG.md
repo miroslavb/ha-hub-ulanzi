@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.13.3] - 2026-09-04
+
+### Fixed
+- The Light Controller encoder now refreshes the selected entity from Ulanzi
+  Studio global settings before every press/rotation. This keeps keypad and
+  encoder main-service instances synchronized instead of pinning the encoder to
+  the first configured light.
+- Host refreshes preserve the current brightness/temperature/hue channel and
+  optimistic value when the selected entity did not change.
+
 ## [0.13.2] - 2026-09-04
 
 ### Fixed

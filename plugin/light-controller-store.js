@@ -15,8 +15,12 @@ class LightControllerStore extends EventTarget {
     this.optimistic = null;
   }
 
-  configure(config) {
+  configure(config, options) {
     const c = config || {};
+    const opts = options || {};
+    const previousEntityId = this.currentItem()?.entityId || null;
+    const previousModeIndex = this.modeIndex;
+    const previousOptimistic = this.optimistic;
     this.items = (Array.isArray(c.items) ? c.items : [])
       .map(item => ({
         entityId: String(item?.entityId || '').trim(),
@@ -36,8 +40,10 @@ class LightControllerStore extends EventTarget {
       c.showEncoderFeedback === 'false' ||
       c.showEncoderFeedback === 'off'
     );
-    this.modeIndex = 0;
-    this.optimistic = null;
+    const sameEntity = previousEntityId && previousEntityId === this.currentItem()?.entityId;
+    const preserveTransient = !!opts.preserveMode && !!sameEntity;
+    this.modeIndex = preserveTransient ? previousModeIndex : 0;
+    this.optimistic = preserveTransient ? previousOptimistic : null;
     this._emit('changed');
   }
 

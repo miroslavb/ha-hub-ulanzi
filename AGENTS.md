@@ -11,6 +11,9 @@
   row listeners close over those objects. Replace scalar settings only.
 - Disabling encoder feedback must actively paint the slot transparent; merely
   skipping future renders leaves the previously drawn frame visible.
+- Treat keypad and encoder main services as separate processes: persist selector
+  changes through Studio global settings and refresh them before each dial input.
+  Preserve the current control channel only when the selected entity is unchanged.
 - Derive available light channels from `supported_color_modes`; never offer
   colour temperature or hue to entities that do not advertise them.
 - Use modern Kelvin service data (`color_temp_kelvin`) while accepting legacy

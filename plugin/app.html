@@ -43,7 +43,42 @@ const editMode = new window.EditModeManager();
 const lightController = new window.LightControllerStore();
 const reveal = new window.RevealAnimator();
 
-const router = new window.ActionRouter({ client: haClient, cache, settings, pulse, editMode, lightController });
+let globalRefreshPromise = null;
+let globalRefreshResolve = null;
+let globalRefreshTimer = null;
+
+function finishGlobalRefresh(updated) {
+  if (!globalRefreshPromise) return;
+  const resolve = globalRefreshResolve;
+  if (globalRefreshTimer) clearTimeout(globalRefreshTimer);
+  globalRefreshPromise = null;
+  globalRefreshResolve = null;
+  globalRefreshTimer = null;
+  resolve(!!updated);
+}
+
+// Studio may host keypad and encoder actions in separate main-service
+// instances. Pull the host-persisted selection before every dial input so the
+// encoder never relies on another process's in-memory store.
+function refreshLightControllerFromHost() {
+  if (!$UD.getGlobalSettings) return Promise.resolve(false);
+  if (globalRefreshPromise) return globalRefreshPromise;
+  globalRefreshPromise = new Promise(resolve => {
+    globalRefreshResolve = resolve;
+    globalRefreshTimer = setTimeout(() => finishGlobalRefresh(false), 500);
+  });
+  try {
+    $UD.getGlobalSettings();
+  } catch (e) {
+    finishGlobalRefresh(false);
+  }
+  return globalRefreshPromise;
+}
+
+const router = new window.ActionRouter({
+  client: haClient, cache, settings, pulse, editMode, lightController,
+  refreshLightController: refreshLightControllerFromHost
+});
 router.register(window.ToggleAction);
 router.register(window.SmartToggleAction);
 router.register(window.AggregateAction);
@@ -108,13 +143,14 @@ $UD.onDidReceiveGlobalSettings && $UD.onDidReceiveGlobalSettings((message) => {
   if (data.revealMode) globalConnection.revealMode = data.revealMode;
   if (data.lightController) {
     globalConnection.lightController = data.lightController;
-    lightController.configure(data.lightController);
+    lightController.configure(data.lightController, { preserveMode: true });
   }
   reveal.setEnabled(globalConnection.revealEnabled);
   reveal.setPuzzleMode(globalConnection.revealMode === 'puzzle');
   if (globalConnection.haUrl && globalConnection.token) {
     haClient.configure(globalConnection.haUrl, globalConnection.token);
   }
+  finishGlobalRefresh(!!data.lightController);
 });
 
 // Helper: apply connection settings from any action's param payload.
